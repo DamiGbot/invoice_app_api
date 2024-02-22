@@ -10,20 +10,22 @@ using Microsoft.AspNetCore.Mvc;
 namespace InvoiceAppApi.Controllers
 {
     [ApiController]
-    [Route("/api/[controller]")]
-    public class UsersController : ControllerBase
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly InvoiceAppDbContext _context;
         private readonly ITokenService _tokenService;
+        private readonly ILogger<AuthController> _logger;
 
-        public UsersController(UserManager<ApplicationUser> userManager, InvoiceAppDbContext context, ITokenService tokenService, ILogger<UsersController> logger)
+        public AuthController(UserManager<ApplicationUser> userManager, InvoiceAppDbContext context, ITokenService tokenService, ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _context = context;
             _tokenService = tokenService;
+            _logger = logger;
         }
-
 
         [HttpPost]
         [Route("register")]
@@ -97,7 +99,7 @@ namespace InvoiceAppApi.Controllers
             {
                 Username = userInDb.UserName,
                 Email = userInDb.Email,
-                Token = accessToken,
+                AccessToken = accessToken,
             });
         }
     }

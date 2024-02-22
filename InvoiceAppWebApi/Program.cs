@@ -1,9 +1,11 @@
 
 using InvoiceApp.Data.Models;
 using InvoiceApp.Data.Models.Repository;
+using InvoiceApp.Middlewares;
 using InvoiceApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -27,6 +29,13 @@ namespace InvoiceAppWebApi
             builder.Services.AddControllers().AddJsonOptions(opt =>
             {
                 opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.ReportApiVersions = true;
             });
 
             builder.Services
@@ -68,6 +77,14 @@ namespace InvoiceAppWebApi
                 };
             });
 
+            //CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("all", builder => builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod());
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(option =>
@@ -76,10 +93,9 @@ namespace InvoiceAppWebApi
                 option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter a valid token",
+                    Description = "Enter the Bearer Authorization: `Bearer Generated-JWT-Token`",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
+                    Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer"
                 });
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -90,7 +106,7 @@ namespace InvoiceAppWebApi
                             Reference = new OpenApiReference
                             {
                                 Type=ReferenceType.SecurityScheme,
-                                Id="Bearer"
+                                Id=JwtBearerDefaults.AuthenticationScheme
                             }
                         },
                         new string[]{}
@@ -103,13 +119,15 @@ namespace InvoiceAppWebApi
 
             var app = builder.Build();
 
+            // Custom Middleware             
+            app.UseMiddleware<SwaggerBasicAuthMiddleware>();
+            app.UseMiddleware<UserDetailsMiddleware>();
+
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseMiddleware<SwaggerBasicAuthMiddleware>();
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.UseCors("all");
+
 
             app.UseHttpsRedirection();
 

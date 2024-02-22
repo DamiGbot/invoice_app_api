@@ -1,4 +1,5 @@
 ﻿using InvoiceApp.Data.Models;
+using InvoiceApp.Services.IServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -6,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace InvoiceApp.Services
+namespace InvoiceApp.Services.Services
 {
     public class TokenService : ITokenService
     {
