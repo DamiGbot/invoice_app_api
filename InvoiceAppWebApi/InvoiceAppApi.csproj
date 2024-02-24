@@ -24,6 +24,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InvoiceApp.Data\InvoiceApp.Data.csproj" />
+    <ProjectReference Include="..\InvoiceApp.SD\InvoiceApp.SD.csproj" />
     <ProjectReference Include="..\InvoiceApp.Services\InvoiceApp.Services.csproj" />
     <ProjectReference Include="..\Middlewares\InvoiceApp.Middlewares.csproj" />
   </ItemGroup>

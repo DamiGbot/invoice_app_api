@@ -5,6 +5,8 @@ namespace InvoiceApp.Data.Requests
 {
     public class RegistrationRequest
     {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
         [Required]
         [EmailAddress]
         public string? Email { get; set; }

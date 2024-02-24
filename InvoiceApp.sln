@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoiceApp.Data", "InvoiceA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoiceApp.Services", "InvoiceApp.Services\InvoiceApp.Services.csproj", "{4007B2C8-FB0D-4873-B741-CC29F1DD418E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvoiceApp.SD", "InvoiceApp.SD\InvoiceApp.SD.csproj", "{A59DB06F-735C-440B-B631-850315F50CA4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{4007B2C8-FB0D-4873-B741-CC29F1DD418E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4007B2C8-FB0D-4873-B741-CC29F1DD418E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4007B2C8-FB0D-4873-B741-CC29F1DD418E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A59DB06F-735C-440B-B631-850315F50CA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A59DB06F-735C-440B-B631-850315F50CA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A59DB06F-735C-440B-B631-850315F50CA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A59DB06F-735C-440B-B631-850315F50CA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

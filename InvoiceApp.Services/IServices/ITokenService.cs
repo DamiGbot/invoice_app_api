@@ -1,9 +1,11 @@
 ﻿using InvoiceApp.Data.Models;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace InvoiceApp.Services.IServices
 {
     public interface ITokenService
     {
-        string CreateToken(ApplicationUser user);
+        JwtSecurityToken CreateToken(ApplicationUser user);
+        string GenerateRefreshToken();
     }
 }

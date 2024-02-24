@@ -1,11 +1,20 @@
 ﻿using InvoiceApp.Data.Enums;
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace InvoiceApp.Data.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        [StringLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string LastName { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
         public Role Role { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
+        public bool IsLockedOutByAdmin { get; set; }
+        public DateTime CreatedOn { get; set; }
         public virtual ICollection<Invoice> Invoices { get; set; }
     }
 }

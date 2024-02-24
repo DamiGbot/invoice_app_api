@@ -1,8 +1,10 @@
 
+using InvoiceApp.Data.DAO;
 using InvoiceApp.Data.Models;
 using InvoiceApp.Data.Models.Repository;
 using InvoiceApp.Middlewares;
-using InvoiceApp.Services;
+using InvoiceApp.Services.IServices;
+using InvoiceApp.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -44,16 +46,21 @@ namespace InvoiceAppWebApi
                     options.SignIn.RequireConfirmedAccount = false;
                     options.User.RequireUniqueEmail = true;
                     options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireUppercase = false;
                     options.Password.RequiredLength = 6;
                     options.Password.RequireNonAlphanumeric = false;
-                    options.Password.RequireUppercase = false;
+                    options.Lockout.AllowedForNewUsers = false;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
+                    options.Lockout.MaxFailedAccessAttempts = 3;
                 })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<InvoiceAppDbContext>();
 
-            var validIssuer = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidIssuer");
-            var validAudience = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidAudience");
-            var symmetricSecurityKey = builder.Configuration.GetValue<string>("JwtTokenSettings:SymmetricSecurityKey");
+            //var validIssuer = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidIssuer");
+            //var validAudience = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidAudience");
+            //var symmetricSecurityKey = builder.Configuration.GetValue<string>("JwtTokenSettings:SymmetricSecurityKey");
+            var jwtTokenSettings = builder.Configuration.GetSection("JwtTokenSettings").Get<JwtTokenSettings>();
 
             builder.Services.AddAuthentication(options => {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,10 +76,10 @@ namespace InvoiceAppWebApi
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = validIssuer,
-                    ValidAudience = validAudience,
+                    ValidIssuer = jwtTokenSettings.ValidIssuer,
+                    ValidAudience = jwtTokenSettings.ValidAudience,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(symmetricSecurityKey)
+                        Encoding.UTF8.GetBytes(jwtTokenSettings.SymmetricSecurityKey)
                     ),
                 };
             });
@@ -116,6 +123,8 @@ namespace InvoiceAppWebApi
 
             // Custom Services 
             builder.Services.AddScoped<ITokenService, TokenService>(); 
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddSingleton(jwtTokenSettings);
 
             var app = builder.Build();
 

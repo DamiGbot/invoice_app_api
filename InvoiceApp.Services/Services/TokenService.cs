@@ -1,10 +1,12 @@
-﻿using InvoiceApp.Data.Models;
+﻿using InvoiceApp.Data.DAO;
+using InvoiceApp.Data.Models;
 using InvoiceApp.Services.IServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace InvoiceApp.Services.Services
@@ -15,33 +17,43 @@ namespace InvoiceApp.Services.Services
         private const int ExpirationMinutes = 30;
         private readonly ILogger<TokenService> _logger;
         private readonly IConfiguration _config;
+        private readonly JwtTokenSettings _jwtTokenSettings;
 
-        public TokenService(ILogger<TokenService> logger, IConfiguration config)
+        public TokenService(ILogger<TokenService> logger, IConfiguration config, JwtTokenSettings jwtTokenSettings)
         {
             _logger = logger;
             _config = config;
+            _jwtTokenSettings = jwtTokenSettings;
         }
 
-        public string CreateToken(ApplicationUser user)
+        public JwtSecurityToken CreateToken(ApplicationUser user)
         {
-            var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
+            var expiration = DateTime.UtcNow.AddMinutes(_jwtTokenSettings.DurationInMinutes);
             var token = CreateJwtToken(
                 CreateClaims(user),
                 CreateSigningCredentials(),
                 expiration
             );
-            var tokenHandler = new JwtSecurityTokenHandler();
+            //var tokenHandler = new JwtSecurityTokenHandler();
 
             _logger.LogInformation("JWT Token created");
 
-            return tokenHandler.WriteToken(token);
+            return token;
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
 
         private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials,
             DateTime expiration) =>
             new(
-                issuer: _config["JwtTokenSettings:ValidIssuer"],
-                audience: _config["JwtTokenSettings:ValidAudience"],
+                issuer: _jwtTokenSettings.ValidIssuer,
+                audience: _jwtTokenSettings.ValidAudience,
                 claims: claims,
                 expires: expiration,
                 signingCredentials: credentials
@@ -49,7 +61,7 @@ namespace InvoiceApp.Services.Services
 
         private List<Claim> CreateClaims(ApplicationUser user)
         {
-            var jwtSub = _config["JwtTokenSettings:JwtRegisteredClaimNamesSub"];
+            var jwtSub = _jwtTokenSettings.JwtRegisteredClaimNamesSub;
 
             try
             {
@@ -75,7 +87,7 @@ namespace InvoiceApp.Services.Services
 
         private SigningCredentials CreateSigningCredentials()
         {
-            var symmetricSecurityKey = _config["JwtTokenSettings:SymmetricSecurityKey"];
+            var symmetricSecurityKey = _jwtTokenSettings.SymmetricSecurityKey;
 
             return new SigningCredentials(
                 new SymmetricSecurityKey(

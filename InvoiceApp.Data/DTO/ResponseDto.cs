@@ -1,5 +1,4 @@
-﻿
-namespace InvoiceApp.Data.Responses
+﻿namespace InvoiceApp.Data.DTO
 {
     public class ResponseDto<T>
     {
