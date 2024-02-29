@@ -7,16 +7,8 @@ using InvoiceApp.Data.Responses;
 using InvoiceApp.SD;
 using InvoiceApp.Services.IServices;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InvoiceApp.Services.Services
 {
@@ -120,55 +112,205 @@ namespace InvoiceApp.Services.Services
 
         public async Task<ResponseDto<string>> Register(RegistrationRequest registrationRequest)
         {
-            // register the user 
-            ApplicationUser user = new()
-            {
-                UserName = registrationRequest.Username,
-                Email = registrationRequest.Email,
-                FirstName = registrationRequest.FirstName,
-                LastName = registrationRequest.LastName,
-                CreatedOn = DateTime.Now
-            };
+            _logger.LogInformation("Processing register request {@RegistrationRequestDto}", registrationRequest);
             ResponseDto<string> response = new();
 
-            var registrationResult = await _userManager.CreateAsync(user, registrationRequest.Password!);
-            
-            if (registrationResult.Succeeded)
+            try
             {
-                IdentityResult roleResult = await AssignRole(user, registrationRequest.Role.ToString());
+                // register the user 
+                ApplicationUser user = new()
+                {
+                    UserName = registrationRequest.Username,
+                    Email = registrationRequest.Email,
+                    FirstName = registrationRequest.FirstName,
+                    LastName = registrationRequest.LastName,
+                    CreatedOn = DateTime.Now
+                };
 
-                if (roleResult.Succeeded)
+                var registrationResult = await _userManager.CreateAsync(user, registrationRequest.Password!);
+
+                if (registrationResult.Succeeded)
                 {
-                    response.Message = "User Registration was Successful.";
-                    response.IsSuccess = true;
-                    response.Result = user.Id;
-                    _logger.LogInformation("Register - User with this email registered successfully {0}",
-                        registrationRequest.Email);
-                } else
+                    var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    //// Create confirmation link 
+                    //var confirmationLink = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token = emailConfirmationToken }, Request.Scheme);
+
+                    // Send an email with the URL and token
+                    // var resetUrl = $"https://{baseurl}/confirm-email?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+                    // send the email. 
+                    // await _emailService.SendPasswordResetEmailAsync(user.Email, resetUrl);
+
+
+                    IdentityResult roleResult = await AssignRole(user, registrationRequest.Role.ToString());
+
+                    if (roleResult.Succeeded)
+                    {
+                        response.Message = "User Registration was Successful.";
+                        response.IsSuccess = true;
+                        response.Result = user.Id;
+                        _logger.LogInformation("Register - User with this email registered successfully {0}",
+                            registrationRequest.Email);
+                    }
+                    else
+                    {
+                        // Manual Rollback (Data Intergrity) 
+                        var deletionResult = await _userManager.DeleteAsync(user);
+                        if (deletionResult.Succeeded)
+                        {
+                            _logger.LogInformation("Rollback successful - User {Email} deleted after failing to assign role", user.Email);
+                        }
+                        else
+                        {
+                            _logger.LogError("Rollback failed - User {Email} creation could not be rolled back after failing to assign role", user.Email);
+                        }
+
+                        response.Message = roleResult.Errors.FirstOrDefault()?.Description ?? "An error occurred during role assignment.";
+                        response.IsSuccess = false;
+                        response.Result = ErrorMessages.DefaultError;
+
+                        _logger.LogWarning("Register - An error occurred while registering this user {0} - {1}",
+                            registrationRequest.Email, roleResult.Errors.FirstOrDefault()?.Description ?? "Undefined Error");
+                    }
+
+                    registrationRequest.Password = "";
+                }
+                else
                 {
-                    response.Message = roleResult.Errors.FirstOrDefault()?.Description;
+                    response.Message = registrationResult.Errors.FirstOrDefault()?.Description;
                     response.IsSuccess = false;
                     response.Result = ErrorMessages.DefaultError;
 
                     _logger.LogWarning("Register - An error occurred while registering this user {0} - {1}",
-                        registrationRequest.Email, roleResult.Errors.FirstOrDefault()?.Description ?? "Undefined Error");
+                        registrationRequest.Email, registrationResult.Errors.FirstOrDefault()?.Description ?? "Undefined Error");
                 }
-
-                registrationRequest.Password = "";
-            } else
+            } catch (Exception ex)
             {
-                response.Message = registrationResult.Errors.FirstOrDefault()?.Description;
+                _logger.LogError("An error occurred during the registration process: {Message}", ex.Message);
+                response.Message = $"An error occurred: {ex.Message}";
                 response.IsSuccess = false;
-                response.Result = ErrorMessages.DefaultError;
-
-                _logger.LogWarning("Register - An error occurred while registering this user {0} - {1}",
-                    registrationRequest.Email, registrationResult.Errors.FirstOrDefault()?.Description ?? "Undefined Error");
             }
 
             return response;
         }
 
-        public async Task<IdentityResult> AssignRole(ApplicationUser user, string roleName)
+        public async Task<ResponseDto<string>> InitiatePasswordReset(InitiatePasswordResetDto request)
+        {
+            _logger.LogInformation("Processing password request {@InitiatePasswordResetDto}", request);
+            ResponseDto<string> response = new()
+            {
+                IsSuccess = true,
+                Message= "A notification will be sent to this email if an account is registered under it."
+            };
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("Password reset requested for unregistered email: {Email}", request.Email);
+                return response; 
+            }
+
+            // check if the user is not locked out by the admin 
+            if (user.IsLockedOutByAdmin)
+            {
+                response.IsSuccess = false;
+                response.Message = "Your account has been deactivated. Please contact admin..";
+                return response;
+            }
+
+            // send an email with the url and token!!!! 
+            // Generate password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Send an email with the URL and token
+            // var resetUrl = $"https://{baseurl}/confirm-reset-password?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+            // send the email. 
+            // await _emailService.SendPasswordResetEmailAsync(user.Email, resetUrl);
+
+            _logger.LogInformation("Password reset token generated for {Email}", user.Email); 
+            return response;
+        }
+
+        public async Task<ResponseDto<string>> ConfirmPasswordReset(ConfirmPasswordResetDto request)
+        {
+            // log the message 
+            _logger.LogInformation("Processing Confirm password request {@ConfirmPasswordResetDto}", request);
+            ResponseDto<string> response = new()
+            {
+                IsSuccess = false,
+                Message = "Invalid Password Reset Request"
+            };
+
+            var user = await _userManager.FindByNameAsync(request.UserName);
+            if (user == null)
+            {
+                _logger.LogWarning("Invalid Password Reset requested for unregistered username: {UserName}", request.UserName);
+                return response;
+            }
+            // reset password 
+            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.Password);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Password reset completed for this user {0}", request.UserName);
+                response.IsSuccess = true;
+                response.Message = "Your password has been reset. Please sign in.";
+                return response;
+            }
+
+            response.Message = result.Errors.FirstOrDefault()?.Description;
+            _logger.LogWarning("Password reset failed with an error {0} - {1}", request.UserName, response.Message ?? "Undefined identity error");
+
+            return response;
+        }
+
+        public async Task<ResponseDto<UserDto>> ConfirmEmail(ConfirmEmailRequestDto request)
+        {
+            _logger.LogInformation("Confirm email request {@ConfirmEmailRequestDto}", request);
+            ResponseDto<UserDto> response = new()
+            {
+                IsSuccess = false,
+                Message = "Invalid Email Confirmation Request"
+            };
+
+            var user = await _userManager.FindByNameAsync(request.UserName);
+            if (user == null) return response;
+
+            // check if email is Confirmed 
+            var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+            if (isEmailConfirmed)
+            {
+                response.Message =
+                    "The email for this account has been confirmed already.";
+                response.IsSuccess = false;
+
+                return response;
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, request.Token);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Email has been confirmed for this user {0}", request.UserName); 
+                response.IsSuccess = true;
+                response.Message = "Your email has been confirmed.";
+
+                UserDto usertoReturn = new()
+                {
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                };
+
+                response.Result = usertoReturn;
+                return response; 
+            }
+
+            response.Message = result.Errors.FirstOrDefault()?.Description + " .Please contact the admin.";
+            _logger.LogInformation("Email confirmation failed for this user {0} - {1}", request.UserName, response.Message ?? "Undefined Identity Error");
+            return response;
+        }
+
+        private async Task<IdentityResult> AssignRole(ApplicationUser user, string roleName)
         {
             // Check if the role exists
             if (!await _roleManager.RoleExistsAsync(roleName))
@@ -183,6 +325,5 @@ namespace InvoiceApp.Services.Services
             // Attempt to add the user to the role
             return await _userManager.AddToRoleAsync(user, roleName);
         }
-
     }
 }

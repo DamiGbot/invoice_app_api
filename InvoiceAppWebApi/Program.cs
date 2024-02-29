@@ -1,6 +1,7 @@
 
 using InvoiceApp.Data.DAO;
 using InvoiceApp.Data.Models;
+using InvoiceApp.Data.Models.IRepository;
 using InvoiceApp.Data.Models.Repository;
 using InvoiceApp.Middlewares;
 using InvoiceApp.Services.IServices;
@@ -54,12 +55,10 @@ namespace InvoiceAppWebApi
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
                     options.Lockout.MaxFailedAccessAttempts = 3;
                 })
+                .AddDefaultTokenProviders()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<InvoiceAppDbContext>();
 
-            //var validIssuer = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidIssuer");
-            //var validAudience = builder.Configuration.GetValue<string>("JwtTokenSettings:ValidAudience");
-            //var symmetricSecurityKey = builder.Configuration.GetValue<string>("JwtTokenSettings:SymmetricSecurityKey");
             var jwtTokenSettings = builder.Configuration.GetSection("JwtTokenSettings").Get<JwtTokenSettings>();
 
             builder.Services.AddAuthentication(options => {
@@ -124,6 +123,7 @@ namespace InvoiceAppWebApi
             // Custom Services 
             builder.Services.AddScoped<ITokenService, TokenService>(); 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddSingleton(jwtTokenSettings);
 
             var app = builder.Build();

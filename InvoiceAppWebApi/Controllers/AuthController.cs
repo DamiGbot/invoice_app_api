@@ -86,32 +86,32 @@ namespace InvoiceAppApi.Controllers
             return Unauthorized(response);
         }
 
-        //[HttpPost("initiate-reset-password")]
-        //[SwaggerOperation(Summary = "Initiate reset password for all users")]
-        //[SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<string>))]
-        //public async Task<IActionResult> InitiateResetPassword([FromBody] InitiatePasswordResetDto model)
-        //{
-        //    ResponseDto<string> response = await this._authService.InitiatePasswordReset(model);
-        //    return Ok(response);
-        //}
+        [HttpPost("initiate-reset-password")]
+        [SwaggerOperation(Summary = "Initiate reset password for all users")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<string>))]
+        public async Task<IActionResult> InitiateResetPassword([FromBody] InitiatePasswordResetDto model)
+        {
+            ResponseDto<string> response = await _authService.InitiatePasswordReset(model);
+            return Ok(response);
+        }
 
-        //[HttpPost("confirm-reset-password")]
-        //[SwaggerOperation(Summary = "Confirm reset password for all users")]
-        //[SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<string>))]
-        //public async Task<IActionResult> ConfirmResetPassword([FromBody] ConfirmPasswordResetDto model)
-        //{
-        //    ResponseDto<string> response = await this._authService.ConfirmPasswordReset(model);
-        //    return Ok(response);
-        //}
+        [HttpPost("confirm-reset-password")]
+        [SwaggerOperation(Summary = "Confirm reset password for all users")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<string>))]
+        public async Task<IActionResult> ConfirmResetPassword([FromBody] ConfirmPasswordResetDto model)
+        {
+            ResponseDto<string> response = await _authService.ConfirmPasswordReset(model);
+            return Ok(response);
+        }
 
-        //[HttpPost("confirm-email")]
-        //[SwaggerOperation(Summary = "Confirm email for all users")]
-        //[SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<ConfirmEmailResponseDto>))]
-        //public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequestDto model)
-        //{
-        //    ResponseDto<ConfirmEmailResponseDto> response = await this._authService.ConfirmEmail(model);
-        //    return Ok(response);
-        //}
+        [HttpPost("confirm-email")]
+        [SwaggerOperation(Summary = "Confirm email for all users")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<ConfirmEmailResponseDto>))]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequestDto model)
+        {
+            ResponseDto<UserDto> response = await _authService.ConfirmEmail(model);
+            return Ok(response);
+        }
 
         //[HttpPost("refresh-token")]
         //[SwaggerOperation(Summary = "Refresh Token")]
