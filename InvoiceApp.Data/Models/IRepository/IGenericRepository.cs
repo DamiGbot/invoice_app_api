@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using System.Linq.Expressions;
 
 namespace InvoiceApp.Data.Models.IRepository
 {
@@ -13,5 +10,6 @@ namespace InvoiceApp.Data.Models.IRepository
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
+        Task<IEnumerable<T>> GetAllIncludingAsync(params Expression<Func<T, object>>[] includeProperties);
     }
 }

@@ -17,17 +17,11 @@ namespace InvoiceAppApi.Controllers
     //[SwaggerResponse(StatusCodes.Status400BadRequest, "Bad Request", typeof(CustomProblemDetails))]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly InvoiceAppDbContext _context;
-        private readonly ITokenService _tokenService;
         private readonly ILogger<AuthController> _logger;
         private readonly IAuthService _authService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, InvoiceAppDbContext context, ITokenService tokenService, ILogger<AuthController> logger, IAuthService authService)
+        public AuthController(ILogger<AuthController> logger, IAuthService authService)
         {
-            _userManager = userManager;
-            _context = context;
-            _tokenService = tokenService;
             _logger = logger;
             _authService = authService;
         }

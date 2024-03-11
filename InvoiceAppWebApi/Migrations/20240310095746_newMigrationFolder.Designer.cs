@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvoiceAppApi.Migrations
 {
     [DbContext(typeof(InvoiceAppDbContext))]
-    [Migration("20240223121003_UpdateApplicationUser")]
-    partial class UpdateApplicationUser
+    [Migration("20240310095746_newMigrationFolder")]
+    partial class newMigrationFolder
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,8 @@ namespace InvoiceAppApi.Migrations
 
             modelBuilder.Entity("InvoiceApp.Data.Models.Address", b =>
                 {
-                    b.Property<int>("AddressID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressID"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("City")
                         .IsRequired()
@@ -49,7 +46,7 @@ namespace InvoiceAppApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("AddressID");
+                    b.HasKey("Id");
 
                     b.ToTable("Addresses");
                 });
@@ -147,11 +144,12 @@ namespace InvoiceAppApi.Migrations
 
             modelBuilder.Entity("InvoiceApp.Data.Models.Invoice", b =>
                 {
-                    b.Property<string>("InvoiceID")
+                    b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("ClientAddressID")
-                        .HasColumnType("int");
+                    b.Property<string>("ClientAddressID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ClientEmail")
                         .IsRequired()
@@ -164,6 +162,12 @@ namespace InvoiceAppApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("Created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Created_by")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -174,21 +178,27 @@ namespace InvoiceAppApi.Migrations
                     b.Property<int>("PaymentTerms")
                         .HasColumnType("int");
 
-                    b.Property<int>("SenderAddressID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
+                    b.Property<string>("SenderAddressID")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("Updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Updated_by")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("InvoiceID");
+                    b.HasKey("Id");
 
                     b.HasIndex("ClientAddressID");
 
@@ -201,11 +211,8 @@ namespace InvoiceAppApi.Migrations
 
             modelBuilder.Entity("InvoiceApp.Data.Models.Item", b =>
                 {
-                    b.Property<int>("ItemID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemID"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("InvoiceID")
                         .IsRequired()
@@ -224,7 +231,7 @@ namespace InvoiceAppApi.Migrations
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("ItemID");
+                    b.HasKey("Id");
 
                     b.HasIndex("InvoiceID");
 

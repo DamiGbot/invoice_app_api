@@ -24,10 +24,12 @@ namespace InvoiceApp.Services.Services
             _logger = logger;
             _config = config;
             _jwtTokenSettings = jwtTokenSettings;
+            _logger.LogDebug("TokenService instantiated with duration: {Duration} minutes", _jwtTokenSettings.DurationInMinutes);
         }
 
         public JwtSecurityToken CreateToken(ApplicationUser user)
         {
+            _logger.LogInformation("Creating JWT Token for user: {Email}", user.Email);
             var expiration = DateTime.UtcNow.AddMinutes(_jwtTokenSettings.DurationInMinutes);
             var token = CreateJwtToken(
                 CreateClaims(user),
@@ -36,16 +38,18 @@ namespace InvoiceApp.Services.Services
             );
             //var tokenHandler = new JwtSecurityTokenHandler();
 
-            _logger.LogInformation("JWT Token created");
+            _logger.LogInformation("JWT Token created for user: {Email} with expiration: {Expiration}", user.Email, expiration);
 
             return token;
         }
 
         public string GenerateRefreshToken()
         {
+            _logger.LogDebug("Generating new refresh token");
             var randomNumber = new byte[64];
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
+            _logger.LogInformation("Refresh token generated");
             return Convert.ToBase64String(randomNumber);
         }
 
@@ -61,6 +65,7 @@ namespace InvoiceApp.Services.Services
 
         private List<Claim> CreateClaims(ApplicationUser user)
         {
+            _logger.LogDebug("Creating claims for user: {Email}", user.Email);
             var jwtSub = _jwtTokenSettings.JwtRegisteredClaimNamesSub;
 
             try
@@ -76,17 +81,19 @@ namespace InvoiceApp.Services.Services
                     new Claim(ClaimTypes.Role, user.Role.ToString())
                 };
 
+                _logger.LogInformation("Claims created for user: {Email}", user.Email);
                 return claims;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError(e, "Error creating claims for user: {Email}", user.Email);
                 throw;
             }
         }
 
         private SigningCredentials CreateSigningCredentials()
         {
+            _logger.LogDebug("Creating signing credentials");
             var symmetricSecurityKey = _jwtTokenSettings.SymmetricSecurityKey;
 
             return new SigningCredentials(

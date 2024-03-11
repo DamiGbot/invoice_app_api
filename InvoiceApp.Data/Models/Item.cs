@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvoiceApp.Data.Models
 {
-    public class Item
+    public class Item : PrimaryKeyEntity
     {
-        [Key]
-        public int ItemID { get; set; }
         public string InvoiceID { get; set; }
         [ForeignKey(nameof(InvoiceID))]
         public virtual Invoice Invoice { get; set; }

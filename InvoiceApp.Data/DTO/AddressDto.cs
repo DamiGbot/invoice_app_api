@@ -1,8 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace InvoiceApp.Data.Models
+﻿
+namespace InvoiceApp.Data.DTO
 {
-    public class Address : PrimaryKeyEntity
+    public class AddressDto
     {
         public string Street { get; set; }
         public string City { get; set; }

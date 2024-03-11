@@ -23,7 +23,7 @@ namespace InvoiceApp.Middlewares
             // Assuming this middleware runs after authentication middleware
             if (context.User.Identity.IsAuthenticated && !context.Request.Path.StartsWithSegments("/swagger"))
             {
-                var userId = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                var userId = context.User.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 var userName = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
                 var email = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 

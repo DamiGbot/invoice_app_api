@@ -25,12 +25,13 @@ namespace InvoiceApp.Data.Models.Repository
                 .IsRequired(); 
 
             modelBuilder.Entity<Invoice>()
-                .HasKey(i => i.InvoiceID); 
+                .HasKey(i => i.Id); 
 
             modelBuilder.Entity<Invoice>()
                 .HasMany(i => i.Items) 
                 .WithOne(it => it.Invoice) 
-                .HasForeignKey(it => it.InvoiceID); 
+                .HasForeignKey(it => it.InvoiceID)
+                .OnDelete(DeleteBehavior.Cascade);  
 
             modelBuilder.Entity<Invoice>()
                 .HasOne(i => i.SenderAddress) 
@@ -47,10 +48,10 @@ namespace InvoiceApp.Data.Models.Repository
                 .OnDelete(DeleteBehavior.Restrict); 
 
             modelBuilder.Entity<Item>()
-                .HasKey(it => it.ItemID); 
+                .HasKey(it => it.Id); 
 
             modelBuilder.Entity<Address>()
-                .HasKey(a => a.AddressID); 
+                .HasKey(a => a.Id); 
 
         }
     }

@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace InvoiceApp.Data.Models
 {
-    public class BaseEntity
+    public class BaseEntity : PrimaryKeyEntity
     {
         [JsonIgnore]
         public string? Created_by { get; set; }
