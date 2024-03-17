@@ -8,7 +8,8 @@ namespace InvoiceApp.Data.DTO
         public int PaymentTerms { get; set; }
         public string ClientName { get; set; }
         public string ClientEmail { get; set; }
-        public string Status { get; set; }
+        public bool isReady { get; set; }
+        //public string Status { get; set; }
         public AddressDto SenderAddress { get; set; }
         public AddressDto ClientAddress { get; set; }
         public List<ItemDto> Items { get; set; }

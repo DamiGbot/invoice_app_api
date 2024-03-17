@@ -13,6 +13,7 @@ namespace InvoiceApp.Data.Models.Repository
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<InvoiceIdTracker> InvoiceIdTrackers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

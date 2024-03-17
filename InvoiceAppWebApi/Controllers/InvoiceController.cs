@@ -122,6 +122,21 @@ namespace InvoiceAppApi.Controllers
             return Ok(response);
         }
 
+        [HttpPost("{invoiceId}/mark-as-paid")]
+        [Authorize]
+        [SwaggerOperation(Summary = "Mark an Invoice as Paid")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Invoice marked as paid successfully", typeof(ResponseDto<bool>))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Invoice not found")]
+        [SwaggerResponse(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> MarkInvoiceAsPaid(string invoiceId)
+        {
+            var response = await _invoiceService.MarkInvoiceAsPaidAsync(invoiceId);
+            if (!response.IsSuccess)
+            {
+                return NotFound(response);
+            }
+            return Ok(response);
+        }
 
 
     }

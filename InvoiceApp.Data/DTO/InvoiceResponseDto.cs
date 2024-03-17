@@ -7,6 +7,7 @@ namespace InvoiceApp.Data.DTO
     public class InvoiceResponseDto 
     {
         public string Id { get; set; }
+        public string FrontendId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime PaymentDue { get; set; }
         public string Description { get; set; }

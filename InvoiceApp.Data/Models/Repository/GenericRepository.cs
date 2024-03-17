@@ -37,6 +37,11 @@ namespace InvoiceApp.Data.Models.Repository
             _context.Set<T>().Remove(entity);
         }
 
+        public async Task DeleteRangeAsync(IEnumerable<T> entities)
+        {
+            _context.Set<T>().RemoveRange(entities);
+        }
+
         public async Task<IEnumerable<T>> GetAllIncludingAsync(params Expression<Func<T, object>>[] includeProperties)
         {
             IQueryable<T> query = _context.Set<T>();

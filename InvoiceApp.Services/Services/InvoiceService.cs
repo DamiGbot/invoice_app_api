@@ -18,13 +18,15 @@ namespace InvoiceApp.Services.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IInvoiceIdService _invoiceIdService;
 
-        public InvoiceService(ILogger<InvoiceService> logger, IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IMapper mapper)
+        public InvoiceService(ILogger<InvoiceService> logger, IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IMapper mapper, IInvoiceIdService invoiceIdService)
         {
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _invoiceIdService = invoiceIdService;
         }
         public async Task<ResponseDto<string>> AddInvoiceAsync(InvoiceRequestDto invoiceRequestDto)
         {
@@ -32,32 +34,39 @@ namespace InvoiceApp.Services.Services
             var userId = _httpContextAccessor.HttpContext.Items["UserId"]; 
             _logger.LogInformation("Attempting to Create New Invoice for {User} at {time}", userEmail, Contants.currDateTime);
 
+            var frontendId = await _invoiceIdService.GenerateUniqueInvoiceIdForUserAsync((string)userId);
             var response = new ResponseDto<string>();
 
-            if (Enum.TryParse(invoiceRequestDto.Status, ignoreCase: true, out InvoiceStatus statusEnum) && statusEnum == InvoiceStatus.Paid)
-            {
-                _logger.LogWarning("Invoice status is {0}. There is a problem with the status", invoiceRequestDto.Status);
-                response.IsSuccess = false;
-                response.Result = ErrorMessages.DefaultError;
-                response.Message = "The invoice status can either be Draft or Pending";
-                return response;
-            }
+            //if (Enum.TryParse(invoiceRequestDto.Status, ignoreCase: true, out InvoiceStatus statusEnum) && statusEnum == InvoiceStatus.Paid)
+            //{
+            //    _logger.LogWarning("Invoice status is {0}. There is a problem with the status", invoiceRequestDto.Status);
+            //    response.IsSuccess = false;
+            //    response.Result = ErrorMessages.DefaultError;
+            //    response.Message = "The invoice status can either be Draft or Pending";
+            //    return response;
+            //}
 
             await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var invoice = _mapper.Map<Invoice>(invoiceRequestDto);
                 invoice.UserID = userId as string;
+                invoice.Status = invoiceRequestDto.isReady ? InvoiceStatus.Pending : InvoiceStatus.Draft;
+                invoice.CreatedAt = DateTime.Now;
+                invoice.Created_at = DateTime.Now;
+                invoice.FrontendId = frontendId;
 
                 await _unitOfWork.InvoiceRepository.AddAsync(invoice);
 
                 await _unitOfWork.SaveAsync(CancellationToken.None);
                 await _unitOfWork.CommitAsync();
+
+                // if isReady you need to send this the email provided 
                 _logger.LogInformation("Invoice added successfully");
 
                 response.IsSuccess = true;
                 response.Message = "Invoice succesfully created";
-                response.Result = invoice.Id;
+                response.Result = invoice.FrontendId;
             }
             catch (Exception ex)
             {
@@ -229,30 +238,62 @@ namespace InvoiceApp.Services.Services
         {
             _logger.LogInformation("Attempting to edit invoice {InvoiceId}", invoiceId);
 
-            //if (Enum.TryParse(invoiceRequestDto.Status, true, out InvoiceStatus newStatus) && newStatus == InvoiceStatus.Paid)
-            //{
-            //    return new ResponseDto<bool> { IsSuccess = false, Message = "Cannot edit invoices with status 'Paid'." };
-            //}
-
             try
             {
-                var invoice = await _unitOfWork.InvoiceRepository.GetByIdAsync(invoiceId);
+                var invoice = await _unitOfWork.InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
                 if (invoice == null)
                 {
                     _logger.LogWarning("Invoice {InvoiceId} not found.", invoiceId);
                     return new ResponseDto<bool> { IsSuccess = false, Message = "Invoice not found." };
                 }
 
-                //if (invoice.Status == InvoiceStatus.Paid)
-                //{
-                //    _logger.LogWarning("Attempted to edit paid invoice {InvoiceId}.", invoiceId);
-                //    return new ResponseDto<bool> { IsSuccess = false, Message = "Paid invoices cannot be edited." };
-                //}
+                if (invoice.Status == InvoiceStatus.Paid)
+                {
+                    _logger.LogWarning("Attempted to edit paid invoice {InvoiceId}.", invoiceId);
+                    return new ResponseDto<bool> { IsSuccess = false, Message = "Paid invoices cannot be edited." };
+                }
 
+                var invoiceFromRequest = new Invoice();
                 // Map changes
-                _mapper.Map(invoiceRequestDto, invoice);
+                _mapper.Map(invoiceRequestDto, invoiceFromRequest);
+                invoiceFromRequest.Status = invoiceRequestDto.isReady ? InvoiceStatus.Pending : InvoiceStatus.Draft;
+                List<Item> oldItem = invoice.Items;
+                invoice.Items = invoiceFromRequest.Items;
 
+                // Do the address and item checking 
+                var clientAddressIsTheSame = CheckAddress(invoiceFromRequest.ClientAddress, invoice.ClientAddress);
+                var sendersAddressIsTheSame = CheckAddress(invoiceFromRequest.SenderAddress, invoice.SenderAddress);
+                
+                Address oldClientAddress = invoice.ClientAddress;
+                Address oldSenderAddress = invoice.SenderAddress;
+                
+                if (!clientAddressIsTheSame)
+                {
+                    invoice.ClientAddress = invoiceFromRequest.ClientAddress;
+                }
+
+                if (!sendersAddressIsTheSame)
+                {
+                    invoice.SenderAddress = invoiceFromRequest.SenderAddress;
+                }
+
+                // delete the ItemObject from the database 
+                await _unitOfWork.ItemRepository.DeleteRangeAsync(oldItem);
                 await _unitOfWork.InvoiceRepository.UpdateAsync(invoice);
+
+                // if addressIsFalse
+                if (!clientAddressIsTheSame)
+                {
+                    // delete the address 
+                    await _unitOfWork.AddressRepository.DeleteAsync(oldClientAddress);
+                }
+
+                if (!sendersAddressIsTheSame)
+                {
+                    // delete the address 
+                    await _unitOfWork.AddressRepository.DeleteAsync(oldSenderAddress);
+                }
+
                 await _unitOfWork.SaveAsync(CancellationToken.None);
 
                 _logger.LogInformation("Invoice {InvoiceId} updated successfully.", invoice.Id);
@@ -274,7 +315,7 @@ namespace InvoiceApp.Services.Services
 
             try
             {
-                var invoice = await _unitOfWork.InvoiceRepository.GetByIdAsync(invoiceId);
+                var invoice = await _unitOfWork.InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
                 if (invoice == null)
                 {
                     _logger.LogWarning("Invoice {InvoiceId} not found", invoiceId);
@@ -288,6 +329,8 @@ namespace InvoiceApp.Services.Services
                 }
 
                 await _unitOfWork.InvoiceRepository.DeleteAsync(invoice);
+                await _unitOfWork.AddressRepository.DeleteAsync(invoice.ClientAddress);
+                await _unitOfWork.AddressRepository.DeleteAsync(invoice.SenderAddress);
                 await _unitOfWork.SaveAsync(CancellationToken.None);
                 _logger.LogInformation("Invoice {InvoiceId} deleted successfully", invoiceId);
 
@@ -298,6 +341,60 @@ namespace InvoiceApp.Services.Services
                 _logger.LogError(ex, "Error deleting invoice {InvoiceId}", invoiceId);
                 return new ResponseDto<bool> { IsSuccess = false, Message = $"An error occurred: {ex.Message}" };
             }
+        }
+
+        public async Task<ResponseDto<bool>> MarkInvoiceAsPaidAsync(string invoiceId)
+        {
+            _logger.LogInformation("Marking invoice {InvoiceId} as paid at {Time}", invoiceId, DateTime.UtcNow);
+            var response = new ResponseDto<bool> { IsSuccess = false };
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var invoice = await _unitOfWork.InvoiceRepository.GetByIdAsync(invoiceId);
+                if (invoice == null)
+                {
+                    _logger.LogWarning("Invoice {InvoiceId} not found.", invoiceId);
+                    response.Message = "Invoice not found.";
+                    return response;
+                }
+
+                if (invoice.Status == InvoiceStatus.Paid)
+                {
+                    _logger.LogInformation("Invoice {InvoiceId} is already marked as paid.", invoiceId);
+                    response.IsSuccess = true;
+                    response.Message = "Invoice is already marked as paid.";
+                    response.Result = true;
+                    return response;
+                }
+
+                invoice.Status = InvoiceStatus.Paid;
+                //invoice.PaymentDate = DateTime.UtcNow; // Assuming there's a PaymentDate field
+                await _unitOfWork.InvoiceRepository.UpdateAsync(invoice);
+                await _unitOfWork.SaveAsync(CancellationToken.None);
+                await _unitOfWork.CommitAsync();
+
+                _logger.LogInformation("Invoice {InvoiceId} marked as paid successfully.", invoiceId);
+                response.IsSuccess = true;
+                response.Message = "Invoice marked as paid successfully.";
+                response.Result = true;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error marking invoice {InvoiceId} as paid.", invoiceId);
+                response.Message = $"An error occurred: {ex.Message}";
+            }
+
+            return response;
+        }
+           
+        private static bool CheckAddress(Address newAddress, Address currAddress)
+        {
+            return newAddress.Street == currAddress.Street &&
+                   newAddress.City == currAddress.City &&
+                   newAddress.PostCode == currAddress.PostCode &&
+                   newAddress.Country == currAddress.Country;
         }
     }
 }

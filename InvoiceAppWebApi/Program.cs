@@ -4,6 +4,7 @@ using InvoiceApp.Data.Models;
 using InvoiceApp.Data.Models.IRepository;
 using InvoiceApp.Data.Models.Repository;
 using InvoiceApp.Middlewares;
+using InvoiceApp.Services.Helper;
 using InvoiceApp.Services.IServices;
 using InvoiceApp.Services.Services;
 using InvoiceAppApi.Mapping;
@@ -22,7 +23,7 @@ namespace InvoiceAppWebApi
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -130,6 +131,11 @@ namespace InvoiceAppWebApi
             builder.Services.AddScoped<IInvoiceService, InvoiceService>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            builder.Services.AddScoped<IInvoiceIdService, InvoiceIdService>();
+            builder.Services.AddHostedService<CacheRefreshBackgroundService>();
+
+
             builder.Services.AddSingleton(jwtTokenSettings);
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
@@ -151,6 +157,12 @@ namespace InvoiceAppWebApi
             app.UseMiddleware<UserDetailsMiddleware>();
             app.UseAuthorization();
             app.MapControllers();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var invoiceIdService = scope.ServiceProvider.GetRequiredService<IInvoiceIdService>();
+                await invoiceIdService.RefreshCacheAsync();
+            }
             app.Run();
         }
     }

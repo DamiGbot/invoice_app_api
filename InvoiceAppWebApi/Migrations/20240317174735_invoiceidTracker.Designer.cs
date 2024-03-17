@@ -4,6 +4,7 @@ using InvoiceApp.Data.Models.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvoiceAppApi.Migrations
 {
     [DbContext(typeof(InvoiceAppDbContext))]
-    partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240317174735_invoiceidTracker")]
+    partial class invoiceidTracker
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,10 +169,6 @@ namespace InvoiceAppApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FrontendId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

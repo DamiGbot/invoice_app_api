@@ -8,6 +8,7 @@ namespace InvoiceApp.Data.Models
         public string UserID { get; set; }
         [ForeignKey(nameof(UserID))]
         public virtual ApplicationUser User { get; set; }
+        public string FrontendId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime PaymentDue { get; set; }
         public string Description { get; set; }

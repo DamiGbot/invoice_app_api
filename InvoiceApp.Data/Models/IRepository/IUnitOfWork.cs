@@ -6,6 +6,7 @@ namespace InvoiceApp.Data.Models.IRepository
         IInvoiceRepository InvoiceRepository { get; }
         IItemRepository ItemRepository { get; }
         IAddressRepository AddressRepository { get; }
+        IInvoiceIdTrackersRepository invoiceIdTrackersRepository { get; }
         Task BeginTransactionAsync();
         Task SaveAsync(CancellationToken cancellationToken);
         Task CommitAsync();
