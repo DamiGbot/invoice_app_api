@@ -141,6 +141,18 @@ namespace InvoiceAppWebApi
 
             var app = builder.Build();
 
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path.Value == "/")
+                {
+                    context.Response.Redirect("/swagger");
+                }
+                else
+                {
+                    await next();
+                }
+            });
+
             // Custom Middleware             
             app.UseMiddleware<SwaggerBasicAuthMiddleware>();
            
