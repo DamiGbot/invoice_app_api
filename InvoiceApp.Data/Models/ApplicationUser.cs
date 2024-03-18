@@ -1,6 +1,7 @@
 ﻿using InvoiceApp.Data.Enums;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvoiceApp.Data.Models
 {
@@ -15,6 +16,9 @@ namespace InvoiceApp.Data.Models
         public DateTime RefreshTokenExpiryTime { get; set; }
         public bool IsLockedOutByAdmin { get; set; }
         public DateTime CreatedOn { get; set; }
+        //public string AddressID { get; set; }
+        //[ForeignKey(nameof(AddressID))]
+        //public virtual Address Address { get; set; }
         public virtual ICollection<Invoice> Invoices { get; set; }
     }
 }

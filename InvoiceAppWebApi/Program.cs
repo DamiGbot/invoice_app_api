@@ -131,6 +131,7 @@ namespace InvoiceAppWebApi
             builder.Services.AddScoped<IInvoiceService, InvoiceService>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
             builder.Services.AddScoped<IInvoiceIdService, InvoiceIdService>();
             builder.Services.AddHostedService<CacheRefreshBackgroundService>();
