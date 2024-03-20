@@ -19,14 +19,14 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Install dependencies
-        run: dotnet restore ./InvoiceAppWebApi/InvoiceAppApi.csproj
+        run: dotnet restore ./InvoiceAppWebApi/InvoiceApp.Api.csproj
 
       - name: Build
-        run: dotnet build ./InvoiceAppWebApi/InvoiceAppApi.csproj --configuration Release --no-restore
+        run: dotnet build ./InvoiceAppWebApi/InvoiceApp.Api.csproj --configuration Release --no-restore
 
       # publish
       - name: Publish
-        run: dotnet publish ./InvoiceAppWebApi/InvoiceAppApi.csproj --configuration Release --output ./publish
+        run: dotnet publish ./InvoiceAppWebApi/InvoiceApp.Api.csproj --configuration Release --output ./publish
 
       # deploy to azure
       - name: "Deploy to Azure Web App"
