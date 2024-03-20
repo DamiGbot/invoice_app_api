@@ -32,7 +32,7 @@ namespace InvoiceApp.Services.Services
 
             userSpecificIds.Add(newId);
             var tracker = new InvoiceIdTracker { UserId = userId, FrontendId = newId };
-            await _unitOfWork.invoiceIdTrackersRepository.AddAsync(tracker);
+            await _unitOfWork.InvoiceIdTrackersRepository.AddAsync(tracker);
             await _unitOfWork.SaveAsync(CancellationToken.None);
 
             return newId;
@@ -40,7 +40,7 @@ namespace InvoiceApp.Services.Services
 
         public async Task RefreshCacheAsync()
         {
-            var invoiceIdTrackers = await _unitOfWork.invoiceIdTrackersRepository.GetAllAsync();
+            var invoiceIdTrackers = await _unitOfWork.InvoiceIdTrackersRepository.GetAllAsync();
             _userSpecificIdCache.Clear();
 
             foreach (var tracker in invoiceIdTrackers)

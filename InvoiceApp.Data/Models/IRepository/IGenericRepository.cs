@@ -11,6 +11,7 @@ namespace InvoiceApp.Data.Models.IRepository
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<IEnumerable<T>> GetAllIncludingAsync(params Expression<Func<T, object>>[] includeProperties);
+        Task<T> GetByIdIncludingAsync<TKey>(TKey id, params Expression<Func<T, object>>[] includeProperties);
         Task DeleteRangeAsync(IEnumerable<T> entities);
     }
 }

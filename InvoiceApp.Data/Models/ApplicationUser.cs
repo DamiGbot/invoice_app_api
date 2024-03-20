@@ -16,9 +16,10 @@ namespace InvoiceApp.Data.Models
         public DateTime RefreshTokenExpiryTime { get; set; }
         public bool IsLockedOutByAdmin { get; set; }
         public DateTime CreatedOn { get; set; }
-        //public string AddressID { get; set; }
-        //[ForeignKey(nameof(AddressID))]
-        //public virtual Address Address { get; set; }
+        public string? AddressID { get; set; }
+        [ForeignKey(nameof(AddressID))]
+        public virtual Address? Address { get; set; }
+        public virtual ProfilePicture? ProfilePicture { get; set; } = null!;
         public virtual ICollection<Invoice> Invoices { get; set; }
     }
 }

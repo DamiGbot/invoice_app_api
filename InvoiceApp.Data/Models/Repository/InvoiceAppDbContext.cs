@@ -14,6 +14,7 @@ namespace InvoiceApp.Data.Models.Repository
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<InvoiceIdTracker> InvoiceIdTrackers { get; set; }
+        public DbSet<ProfilePicture> ProfilePictures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

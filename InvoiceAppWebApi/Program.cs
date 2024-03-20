@@ -1,4 +1,5 @@
 
+using Azure.Storage.Blobs;
 using InvoiceApp.Data.DAO;
 using InvoiceApp.Data.Models;
 using InvoiceApp.Data.Models.IRepository;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Middlewares;
@@ -30,7 +31,7 @@ namespace InvoiceAppWebApi
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             builder.Services.AddDbContext<InvoiceAppDbContext>(options =>
-                options.UseSqlServer(connectionString, b => b.MigrationsAssembly("InvoiceAppApi")));
+                options.UseSqlServer(connectionString, b => b.MigrationsAssembly("InvoiceApp.Api")));
 
             builder.Services.AddControllers().AddJsonOptions(opt =>
             {
@@ -124,6 +125,8 @@ namespace InvoiceAppWebApi
                 });
             });
 
+            var storageConnection = builder.Configuration["BlobStorageSettings:ConnectionString"];
+
             // Custom Services 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ITokenService, TokenService>(); 
@@ -132,12 +135,19 @@ namespace InvoiceAppWebApi
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IProfilePictureService, ProfilePictureService>();
 
             builder.Services.AddScoped<IInvoiceIdService, InvoiceIdService>();
             builder.Services.AddHostedService<CacheRefreshBackgroundService>();
 
-
             builder.Services.AddSingleton(jwtTokenSettings);
+            builder.Services.AddSingleton<IBlobRepository, BlobRepository>();
+
+            builder.Services.AddAzureClients(azureBuilder =>
+            {
+                azureBuilder.AddBlobServiceClient(storageConnection);
+            });
+            builder.Services.Configure<BlobStorageSettings>(builder.Configuration.GetSection("BlobStorageSettings"));
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
             var app = builder.Build();

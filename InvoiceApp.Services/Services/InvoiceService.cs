@@ -307,7 +307,6 @@ namespace InvoiceApp.Services.Services
             }
         }
 
-
         public async Task<ResponseDto<bool>> DeleteInvoiceAsync(string invoiceId)
         {
             var userId = _httpContextAccessor.HttpContext.Items["UserId"] as string;

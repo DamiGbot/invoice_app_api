@@ -52,5 +52,20 @@ namespace InvoiceApp.Data.Models.Repository
             return await query.ToListAsync();
         }
 
+        public async Task<T> GetByIdIncludingAsync<TKey>(TKey id, params Expression<Func<T, object>>[] includeProperties)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            // Assuming the entity has a single primary key named 'Id'
+            var entity = await query.FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id").Equals(id));
+
+            return entity;
+        }
+
     }
 }

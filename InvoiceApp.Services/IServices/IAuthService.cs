@@ -12,6 +12,6 @@ namespace InvoiceApp.Services.IServices
         Task<ResponseDto<string>> ConfirmPasswordReset(ConfirmPasswordResetDto request);
         Task<ResponseDto<UserDto>> ConfirmEmail(ConfirmEmailRequestDto request);
         //Task<ResponseDto<string>> ResendConfirmationEmail(EmailRequestDto request, string? loggedInAdminEmail);
-        //Task<ResponseDto<RefreshTokenDto>> GetRefreshToken(RefreshTokenDto request);
+        Task<ResponseDto<RefreshTokenDto>> GetRefreshToken(RefreshTokenDto request);
     }
 }

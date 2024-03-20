@@ -38,7 +38,9 @@ namespace InvoiceApp.Data.Models.Repository
         public IInvoiceRepository InvoiceRepository => new InvoiceRepository(_context);
         public IItemRepository ItemRepository => new ItemRepository(_context);
         public IAddressRepository AddressRepository => new AddressRepository(_context);
-        public IInvoiceIdTrackersRepository invoiceIdTrackersRepository => new InvoiceIdTrackersRepository(_context);
+        public IInvoiceIdTrackersRepository InvoiceIdTrackersRepository => new InvoiceIdTrackersRepository(_context);
+        public IApplicationUserRepository ApplicationUserRepository => new ApplicationUserRepository(_context);
+        public IProfilePictureRepository ProfilePictureRepository => new ProfilePictureRepository(_context);
         #endregion Repositories
 
         public async Task BeginTransactionAsync() => this._transaction = await _context.Database.BeginTransactionAsync().ConfigureAwait(false);

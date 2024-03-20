@@ -8,7 +8,10 @@ using InvoiceApp.SD;
 using InvoiceApp.Services.IServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace InvoiceApp.Services.Services
 {
@@ -310,6 +313,43 @@ namespace InvoiceApp.Services.Services
             return response;
         }
 
+        public async Task<ResponseDto<RefreshTokenDto>> GetRefreshToken(RefreshTokenDto request)
+        {
+            ResponseDto<RefreshTokenDto> response =
+                new() { IsSuccess = false, Message = "Invalid access token or refresh token" };
+            ClaimsPrincipal principal = GetPrincipalFromExpiredToken(request.AccessToken);
+            var email = principal.Claims.First(c => c.Type == ClaimTypes.Email).Value;
+
+            //check that the username exists on the token
+            if (string.IsNullOrEmpty(email)) return response;
+
+            ApplicationUser? user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                response.IsSuccess = false;
+                response.Message = "Invalid access token or refresh token";
+                return response;
+            }
+
+            //generate jwt token
+            JwtSecurityToken jwtSecurityToken = _tokenService.CreateToken(user);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_jwtTokenSettings.RefreshTokenValidityInDays);
+            await _userManager.UpdateAsync(user);
+
+            response.IsSuccess = true;
+            response.Message = "Success";
+            response.Result = new RefreshTokenDto
+            {
+                AccessToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken),
+                RefreshToken = newRefreshToken
+            };
+
+            return response;
+        }
+
         private async Task<IdentityResult> AssignRole(ApplicationUser user, string roleName)
         {
             // Check if the role exists
@@ -324,6 +364,28 @@ namespace InvoiceApp.Services.Services
             }
             // Attempt to add the user to the role
             return await _userManager.AddToRoleAsync(user, roleName);
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string? token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtTokenSettings.SymmetricSecurityKey)),
+                ValidateLifetime = false
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            ClaimsPrincipal? principal =
+                tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                    StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Invalid token");
+
+            return principal;
         }
     }
 }

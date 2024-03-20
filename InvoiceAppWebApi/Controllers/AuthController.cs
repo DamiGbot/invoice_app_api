@@ -1,11 +1,9 @@
 ﻿using InvoiceApp.Data.DTO;
 using InvoiceApp.Data.Enums;
-using InvoiceApp.Data.Models;
-using InvoiceApp.Data.Models.Repository;
 using InvoiceApp.Data.Requests;
 using InvoiceApp.Data.Responses;
 using InvoiceApp.Services.IServices;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -19,11 +17,13 @@ namespace InvoiceAppApi.Controllers
     {
         private readonly ILogger<AuthController> _logger;
         private readonly IAuthService _authService;
+        private readonly IProfilePictureService _profilePictureService;
 
-        public AuthController(ILogger<AuthController> logger, IAuthService authService)
+        public AuthController(ILogger<AuthController> logger, IAuthService authService, IProfilePictureService profilePictureService)
         {
             _logger = logger;
             _authService = authService;
+            _profilePictureService = profilePictureService;
         }
 
         [HttpPost]
@@ -107,13 +107,23 @@ namespace InvoiceAppApi.Controllers
             return Ok(response);
         }
 
-        //[HttpPost("refresh-token")]
-        //[SwaggerOperation(Summary = "Refresh Token")]
-        //[SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<AuthResponseDto>))]
-        //public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
-        //{
-        //    ResponseDto<RefreshTokenDto> response = await this._authService.GetRefreshToken(model);
-        //    return Ok(response);
-        //}
+        [HttpPost("refresh-token")]
+        [SwaggerOperation(Summary = "Refresh Token")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<AuthResponseDto>))]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto model)
+        {
+            ResponseDto<RefreshTokenDto> response = await _authService.GetRefreshToken(model);
+            return Ok(response);
+        }
+
+        [HttpPut("update-profile")]
+        [Authorize]
+        [SwaggerOperation(Summary = "Update Profile")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Processed", typeof(ResponseDto<string>))]
+        public async Task<IActionResult> UpdateProfile([FromForm] ProfilePictureUploadRequestDto model)
+        {
+            ResponseDto<string> response = await _profilePictureService.UploadProfilePicture(model, new CancellationToken());
+            return Ok(response);
+        }
     }
 }

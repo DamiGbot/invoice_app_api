@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvoiceAppApi.Migrations
 {
     [DbContext(typeof(InvoiceAppDbContext))]
-    [Migration("20240317174735_invoiceidTracker")]
-    partial class invoiceidTracker
+    [Migration("20240320204750_updateAddresstonullable")]
+    partial class updateAddresstonullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,6 +58,9 @@ namespace InvoiceAppApi.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("AddressID")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -131,6 +134,8 @@ namespace InvoiceAppApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AddressID");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -169,6 +174,10 @@ namespace InvoiceAppApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FrontendId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -254,6 +263,50 @@ namespace InvoiceAppApi.Migrations
                     b.HasIndex("InvoiceID");
 
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("InvoiceApp.Data.Models.ProfilePicture", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("Created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Created_by")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageData")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("Updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Updated_by")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("ProfilePictures");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -389,6 +442,15 @@ namespace InvoiceAppApi.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("InvoiceApp.Data.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("InvoiceApp.Data.Models.Address", "Address")
+                        .WithMany()
+                        .HasForeignKey("AddressID");
+
+                    b.Navigation("Address");
+                });
+
             modelBuilder.Entity("InvoiceApp.Data.Models.Invoice", b =>
                 {
                     b.HasOne("InvoiceApp.Data.Models.Address", "ClientAddress")
@@ -425,6 +487,17 @@ namespace InvoiceAppApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Invoice");
+                });
+
+            modelBuilder.Entity("InvoiceApp.Data.Models.ProfilePicture", b =>
+                {
+                    b.HasOne("InvoiceApp.Data.Models.ApplicationUser", "User")
+                        .WithOne("ProfilePicture")
+                        .HasForeignKey("InvoiceApp.Data.Models.ProfilePicture", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -481,6 +554,8 @@ namespace InvoiceAppApi.Migrations
             modelBuilder.Entity("InvoiceApp.Data.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Invoices");
+
+                    b.Navigation("ProfilePicture");
                 });
 
             modelBuilder.Entity("InvoiceApp.Data.Models.Invoice", b =>
