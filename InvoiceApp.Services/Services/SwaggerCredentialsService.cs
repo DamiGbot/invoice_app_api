@@ -27,11 +27,7 @@ namespace InvoiceApp.Services.Services
 
             ResponseDto<SwaggerCredentialResponseDto> response = new();
 
-            var username = requestDto.UserName;
-            if (requestDto.UserName == null)
-            {
-                username = await _pokemonService.GetRandomPokemonNameAsync();
-            }
+            var username = requestDto == null ? await _pokemonService.GetRandomPokemonNameAsync() : requestDto.UserName;
             
             try
             {
