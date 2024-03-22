@@ -15,6 +15,7 @@ namespace InvoiceApp.Data.Models.Repository
         public DbSet<Item> Items { get; set; }
         public DbSet<InvoiceIdTracker> InvoiceIdTrackers { get; set; }
         public DbSet<ProfilePicture> ProfilePictures { get; set; }
+        public DbSet<SwaggerCredential> SwaggerCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,7 +54,11 @@ namespace InvoiceApp.Data.Models.Repository
                 .HasKey(it => it.Id); 
 
             modelBuilder.Entity<Address>()
-                .HasKey(a => a.Id); 
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<SwaggerCredential>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
 
         }
     }

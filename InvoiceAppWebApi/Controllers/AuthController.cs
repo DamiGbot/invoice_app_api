@@ -2,6 +2,7 @@
 using InvoiceApp.Data.Enums;
 using InvoiceApp.Data.Requests;
 using InvoiceApp.Data.Responses;
+using InvoiceApp.SD;
 using InvoiceApp.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ namespace InvoiceAppApi.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
-    //[SwaggerResponse(StatusCodes.Status400BadRequest, "Bad Request", typeof(CustomProblemDetails))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Bad Request", typeof(CustomProblemDetails))]
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;

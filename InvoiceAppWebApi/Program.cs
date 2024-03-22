@@ -129,6 +129,7 @@ namespace InvoiceAppWebApi
 
             // Custom Services 
             builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddScoped<ITokenService, TokenService>(); 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IInvoiceService, InvoiceService>();
@@ -136,12 +137,18 @@ namespace InvoiceAppWebApi
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfilePictureService, ProfilePictureService>();
-
+            builder.Services.AddScoped<ISwaggerCredentialsService, SwaggerCredentialsService>();
+            builder.Services.AddScoped<IPokemonService, PokemonService>();
             builder.Services.AddScoped<IInvoiceIdService, InvoiceIdService>();
-            builder.Services.AddHostedService<CacheRefreshBackgroundService>();
 
             builder.Services.AddSingleton(jwtTokenSettings);
             builder.Services.AddSingleton<IBlobRepository, BlobRepository>();
+
+            builder.Services.AddHostedService<CacheRefreshBackgroundService>();
+            builder.Services.AddHostedService<ClearExpiredCredentialsService>();
+
+            builder.Services.AddHttpClient<PokemonService>();
+
 
             builder.Services.AddAzureClients(azureBuilder =>
             {

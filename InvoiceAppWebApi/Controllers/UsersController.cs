@@ -22,6 +22,9 @@ namespace InvoiceAppApi.Controllers
 
         [HttpPut("{userId}/details")]
         [Authorize]
+        [SwaggerOperation(Summary = "Update user details")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Request Successful", typeof(ResponseDto<bool>))]
+        [SwaggerResponse(StatusCodes.Status403Forbidden, "Unauthorized to Perform this action")]
         public async Task<IActionResult> UpdateUserDetails(string userId, UserUpdateDto userUpdateDto)
         {
             var response = await _userService.UpdateUserDetailsAsync(userId, userUpdateDto);

@@ -9,6 +9,7 @@ namespace InvoiceApp.Data.Models.IRepository
         IAddressRepository AddressRepository { get; }
         IInvoiceIdTrackersRepository InvoiceIdTrackersRepository { get; }
         IProfilePictureRepository ProfilePictureRepository { get; }
+        ISwaggerCredentialRepository SwaggerCredentialRepository { get; }
         Task BeginTransactionAsync();
         Task SaveAsync(CancellationToken cancellationToken);
         Task CommitAsync();
