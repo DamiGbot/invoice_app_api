@@ -21,5 +21,7 @@ namespace InvoiceApp.Data.Models
         public virtual Address? Address { get; set; }
         public virtual ProfilePicture? ProfilePicture { get; set; } = null!;
         public virtual ICollection<Invoice> Invoices { get; set; }
+        public bool IsDeactivated { get; set; } = false;
+        public DateTime? ScheduledDeletionDate { get; set; }
     }
 }

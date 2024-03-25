@@ -6,7 +6,6 @@ using InvoiceApp.Services.IServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 
 namespace InvoiceApp.Services.Services
 {
@@ -69,5 +68,87 @@ namespace InvoiceApp.Services.Services
                 return new ResponseDto<bool> { IsSuccess = false, Message = $"An error occurred: {ex.Message}" };
             }
         }
+
+        public async Task<ResponseDto<bool>> DeactivateAccountAsync(string userId)
+        {
+            _logger.LogInformation($"Attempting to deactivate account {userId}.");
+
+            if (!IsUserAuthorized(userId))
+            {
+                _logger.LogWarning($"Unauthorized attempt to deactivate account {userId}.");
+                return new ResponseDto<bool> { IsSuccess = false, Message = "Unauthorized to deactivate this account." };
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"DeactivateAccountAsync: User not found for ID {userId}.");
+                return new ResponseDto<bool> { IsSuccess = false, Message = "User not found." };
+            }
+
+            user.IsDeactivated = true;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    _logger.LogError($"DeactivateAccountAsync Error: {error.Code} - {error.Description}");
+                }
+                return new ResponseDto<bool> { IsSuccess = false, Message = "Failed to deactivate account." };
+            }
+
+            _logger.LogInformation($"User {userId} account deactivated successfully.");
+            return new ResponseDto<bool> { IsSuccess = true, Message = "Account deactivated successfully." };
+        }
+
+
+        public async Task<ResponseDto<bool>> DeleteAccountAsync(string userId)
+        {
+            _logger.LogInformation($"Attempting to delete account {userId}.");
+
+            if (!IsUserAuthorized(userId))
+            {
+                _logger.LogWarning($"Unauthorized attempt to delete account {userId}.");
+                return new ResponseDto<bool> { IsSuccess = false, Message = "Unauthorized to delete this account." };
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"DeleteAccountAsync: User not found for ID {userId}.");
+                return new ResponseDto<bool> { IsSuccess = false, Message = "User not found." };
+            }
+
+            // Schedule deletion after 30 days
+            user.ScheduledDeletionDate = DateTime.UtcNow.AddDays(30);
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                // Log specific errors from the result for debugging
+                foreach (var error in result.Errors)
+                {
+                    _logger.LogError($"DeleteAccountAsync Error: {error.Code} - {error.Description}");
+                }
+                return new ResponseDto<bool> { IsSuccess = false, Message = "Failed to schedule account for deletion." };
+            }
+
+            _logger.LogInformation($"User {userId} account scheduled for deletion in 30 days.");
+            // Update the success message to reflect the 30-day retention period
+            return new ResponseDto<bool> { IsSuccess = true, Message = "Your account has been scheduled for deletion and will be permanently removed after 30 days." };
+        }
+
+
+        private bool IsUserAuthorized(string userId)
+        {
+            var currentUser = _httpContextAccessor.HttpContext.User;
+            var currentUserId = _userManager.GetUserId(currentUser);
+            var isAdmin = currentUser.IsInRole("Admin");
+
+            // Allow if the user is admin or the current user is performing the action on their own account
+            return isAdmin || currentUserId == userId;
+        }
+
     }
 }

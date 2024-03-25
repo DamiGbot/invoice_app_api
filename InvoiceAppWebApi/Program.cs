@@ -123,6 +123,7 @@ namespace InvoiceAppWebApi
                         new string[]{}
                     }
                 });
+                option.EnableAnnotations();
             });
 
             var storageConnection = builder.Configuration["BlobStorageSettings:ConnectionString"];

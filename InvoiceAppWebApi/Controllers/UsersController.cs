@@ -35,5 +35,46 @@ namespace InvoiceAppApi.Controllers
 
             return BadRequest(response);
         }
-    }       
+
+        [HttpPut("{userId}/deactivate")]
+        [SwaggerOperation(Summary = "Deactivate User Account", Description = "Deactivates a user's account based on the provided user ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Account deactivated successfully.", typeof(ResponseDto<bool>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Could not deactivate account due to a problem with the request.")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "User account not found.")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.")]
+        public async Task<IActionResult> DeactivateAccount(string userId)
+        {
+            var response = await _userService.DeactivateAccountAsync(userId);
+            if (!response.IsSuccess)
+            {
+                if (response.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpDelete("{userId}")]
+        [SwaggerOperation(Summary = "Delete User Account", Description = "Permanently deletes a user's account based on the provided user ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Account deleted successfully.", typeof(ResponseDto<bool>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Could not delete account due to a problem with the request.")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "User account not found.")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.")]
+        public async Task<IActionResult> DeleteAccount(string userId)
+        {
+            var response = await _userService.DeleteAccountAsync(userId);
+            if (!response.IsSuccess)
+            {
+                if (response.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+    }
 }

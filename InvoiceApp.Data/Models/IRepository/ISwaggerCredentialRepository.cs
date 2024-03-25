@@ -5,5 +5,6 @@ namespace InvoiceApp.Data.Models.IRepository
     {
         Task<SwaggerCredential> GetByUsernameAsync(string username);
         Task<List<SwaggerCredential>> GetExpiredSwaggerCredentialsAsync();
+        Task ClearExpiredSwaggerCredentialsAsync();
     }
 }

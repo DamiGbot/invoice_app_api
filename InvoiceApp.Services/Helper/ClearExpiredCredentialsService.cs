@@ -1,6 +1,5 @@
 ﻿
 using InvoiceApp.Data.Models.IRepository;
-using InvoiceApp.Data.Models.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,9 +21,10 @@ namespace InvoiceApp.Services.Helper
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 var nextRunTime = now.Date.AddDays(1); 
                 var delay = nextRunTime - now;
+                delay = delay.TotalSeconds < 0 ? TimeSpan.FromDays(1) + delay : delay;
 
                 _logger.LogInformation($"ClearExpiredCredentialsService scheduled to run at: {nextRunTime}. Current time: {now}.");
                 await Task.Delay(delay, stoppingToken);
@@ -49,7 +49,7 @@ namespace InvoiceApp.Services.Helper
                 try
                 {
                     // Implementation to delete expired credentials
-                    await unitOfWork.SwaggerCredentialRepository.GetExpiredSwaggerCredentialsAsync();
+                    await unitOfWork.SwaggerCredentialRepository.ClearExpiredSwaggerCredentialsAsync();
                     await unitOfWork.SaveAsync(CancellationToken.None);
 
                     _logger.LogInformation("Expired credentials cleared successfully.");

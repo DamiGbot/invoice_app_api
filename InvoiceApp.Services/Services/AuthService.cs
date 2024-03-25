@@ -47,6 +47,15 @@ namespace InvoiceApp.Services.Services
                 return response;
             }
 
+            if (user.IsDeactivated)
+            {
+                response.IsSuccess = false;
+                response.Message = "Your account is currently deactivated. Please contact the admin to reactivate your account.";
+                _logger.LogInformation("Login attempt failed - Account is deactivated {Email}", authRequest.Email);
+                return response;
+            }
+
+
             var result = await _signInManager.PasswordSignInAsync(user.UserName, authRequest.Password, false, true);
 
             if (result.Succeeded)

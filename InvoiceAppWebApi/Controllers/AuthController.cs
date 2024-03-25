@@ -29,6 +29,7 @@ namespace InvoiceAppApi.Controllers
 
         [HttpPost]
         [Route("register")]
+        [SwaggerOperation(Summary = "registration for all users")]
         [SwaggerResponse(StatusCodes.Status201Created, "Request Successful", typeof(ResponseDto<string>))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "Request Unsuccessful", typeof(ResponseDto<string>))]
         public async Task<IActionResult> Register(RegistrationRequestDTO registrationRequestDto)
