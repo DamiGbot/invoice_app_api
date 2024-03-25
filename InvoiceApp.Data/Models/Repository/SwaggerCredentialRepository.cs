@@ -1,16 +1,13 @@
 ﻿
 using InvoiceApp.Data.Models.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InvoiceApp.Data.Models.Repository
 {
     public class SwaggerCredentialRepository : GenericRepository<SwaggerCredential>, ISwaggerCredentialRepository
     {
-        private readonly ILogger<SwaggerCredentialRepository> _logger;
-        public SwaggerCredentialRepository(InvoiceAppDbContext context, ILogger<SwaggerCredentialRepository> logger) : base(context)
+        public SwaggerCredentialRepository(InvoiceAppDbContext context) : base(context)
         {
-            _logger = logger;
         }
 
         public async Task<SwaggerCredential> GetByUsernameAsync(string username)
@@ -30,16 +27,7 @@ namespace InvoiceApp.Data.Models.Repository
         public async Task ClearExpiredSwaggerCredentialsAsync()
         {
             var expiredCredentials = await GetExpiredSwaggerCredentialsAsync();
-
-            if (expiredCredentials.Any())
-            {
-                _context.SwaggerCredentials.RemoveRange(expiredCredentials);
-                _logger.LogInformation($"{expiredCredentials.Count} expired Swagger credentials cleared successfully.");
-            }
-            else
-            {
-                _logger.LogInformation("No expired Swagger credentials found to clear.");
-            }
+            _context.SwaggerCredentials.RemoveRange(expiredCredentials);
         }
     }
 }
