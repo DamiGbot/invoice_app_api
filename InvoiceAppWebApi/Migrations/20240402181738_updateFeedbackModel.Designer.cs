@@ -4,6 +4,7 @@ using InvoiceApp.Data.Models.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvoiceAppApi.Migrations
 {
     [DbContext(typeof(InvoiceAppDbContext))]
-    partial class InvoiceAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240402181738_updateFeedbackModel")]
+    partial class updateFeedbackModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

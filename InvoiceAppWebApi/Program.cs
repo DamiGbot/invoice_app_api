@@ -141,6 +141,7 @@ namespace InvoiceAppWebApi
             builder.Services.AddScoped<ISwaggerCredentialsService, SwaggerCredentialsService>();
             builder.Services.AddScoped<IPokemonService, PokemonService>();
             builder.Services.AddScoped<IInvoiceIdService, InvoiceIdService>();
+            builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
             builder.Services.AddSingleton(jwtTokenSettings);
             builder.Services.AddSingleton<IBlobRepository, BlobRepository>();

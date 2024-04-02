@@ -38,6 +38,10 @@ namespace InvoiceAppApi.Mapping
                 //});
 
             CreateMap<Invoice, InvoiceResponseDto>();
+            CreateMap<Feedback, FeedbackSubmitDto>();
+            CreateMap<FeedbackSubmitDto, Feedback>();
+            CreateMap<Feedback, FeedbackResponseDto>();
+
 
             CreateMap<Item, ItemDto>()
                 .ForMember(dest => dest.Total, opt => opt.MapFrom(src => src.Price * src.Quantity)); ;

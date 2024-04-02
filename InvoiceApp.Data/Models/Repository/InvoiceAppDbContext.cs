@@ -16,6 +16,7 @@ namespace InvoiceApp.Data.Models.Repository
         public DbSet<InvoiceIdTracker> InvoiceIdTrackers { get; set; }
         public DbSet<ProfilePicture> ProfilePictures { get; set; }
         public DbSet<SwaggerCredential> SwaggerCredentials { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

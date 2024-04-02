@@ -42,6 +42,7 @@ namespace InvoiceApp.Data.Models.Repository
         public IApplicationUserRepository ApplicationUserRepository => new ApplicationUserRepository(_context);
         public IProfilePictureRepository ProfilePictureRepository => new ProfilePictureRepository(_context);
         public ISwaggerCredentialRepository SwaggerCredentialRepository => new SwaggerCredentialRepository(_context);
+        public IFeedbackRepository FeedbackRepository => new FeedbackRepository(_context);
         #endregion Repositories
 
         public async Task BeginTransactionAsync() => this._transaction = await _context.Database.BeginTransactionAsync().ConfigureAwait(false);

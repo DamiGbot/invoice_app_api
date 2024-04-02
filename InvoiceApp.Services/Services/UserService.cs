@@ -215,6 +215,7 @@ namespace InvoiceApp.Services.Services
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
+                    _logger.LogWarning("User doesn't exist!!");
                     return new ResponseDto<bool> { IsSuccess = false, Message = "User not found." };
                 }
 
@@ -273,8 +274,6 @@ namespace InvoiceApp.Services.Services
                 return new ResponseDto<bool> { IsSuccess = false, Message = $"An error occurred: {ex.Message}" };
             }
         }
-
-
 
         private bool IsUserAuthorized(string userId)
         {
