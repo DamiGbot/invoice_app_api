@@ -61,6 +61,7 @@ namespace InvoiceApp.Services.Services
             if (result.Succeeded)
             {
                 IList<string> roles = await _userManager.GetRolesAsync(user);
+                user.Role = roles[0].Equals("User") ? Role.User : Role.Admin;
 
 
                 var jwtSecurityToken = _tokenService.CreateToken(user); 
@@ -78,6 +79,8 @@ namespace InvoiceApp.Services.Services
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     UserName = user.UserName,
+                    ProfilePicture = user.ProfilePicture,
+                    Address = user.Address
                 };
 
                 usertoReturn.Status = user.LockoutEnd >= DateTimeOffset.UtcNow
