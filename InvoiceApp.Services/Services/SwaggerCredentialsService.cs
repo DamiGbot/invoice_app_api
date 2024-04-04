@@ -35,7 +35,7 @@ namespace InvoiceApp.Services.Services
 
                 // Generate a random password
                 var password = GenerateRandomPassword();
-                var expiryTime = DateTime.UtcNow.AddHours(24);
+                var expiryTime = DateTime.Now.AddHours(24);
                 var passwordHasher = new PasswordHasher<object?>();
 
                 var swaggerCredential = new SwaggerCredential
