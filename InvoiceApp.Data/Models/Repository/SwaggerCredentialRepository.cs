@@ -19,7 +19,7 @@ namespace InvoiceApp.Data.Models.Repository
         public async Task<List<SwaggerCredential>> GetExpiredSwaggerCredentialsAsync()
         {
             var expiredCredentials = await _context.SwaggerCredentials
-                                                   .Where(cred => cred.ExpiryTime <= DateTime.UtcNow)
+                                                   .Where(cred => cred.ExpiryTime <= DateTime.Now)
                                                    .ToListAsync();
             return expiredCredentials;
         }
