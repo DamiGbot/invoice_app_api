@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Middlewares;
@@ -32,6 +33,12 @@ namespace InvoiceAppWebApi
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             builder.Services.AddDbContext<InvoiceAppDbContext>(options =>
                 options.UseSqlServer(connectionString, b => b.MigrationsAssembly("InvoiceApp.Api")));
+
+            builder.Logging.AddAzureWebAppDiagnostics();
+            builder.Services.Configure<AzureBlobLoggerOptions>(options =>
+            {
+                options.BlobName = "log.txt";
+            });
 
             builder.Services.AddControllers().AddJsonOptions(opt =>
             {
