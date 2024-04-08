@@ -95,13 +95,24 @@ namespace InvoiceAppWebApi
                 };
             });
 
+
+            var allowedOrigins = builder.Configuration["CorsPolicy__AllowedOrigins"]?.Split(';') ?? new string[0];
             //CORS
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddPolicy("all", builder => builder.AllowAnyOrigin()
-            //        .AllowAnyHeader()
-            //        .AllowAnyMethod());
-            //});
+            builder.Services.AddCors(options =>
+            {
+                //options.AddPolicy("all", builder => builder.AllowAnyOrigin()
+                //    .AllowAnyHeader()
+                //    .AllowAnyMethod());
+
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder =>
+                    {
+                        builder.WithOrigins(allowedOrigins)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
+                    });
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -187,7 +198,7 @@ namespace InvoiceAppWebApi
             // Configure the HTTP request pipeline.
             app.UseSwagger();
             app.UseSwaggerUI();
-            //app.UseCors("all");
+            app.UseCors("AllowSpecificOrigin");
 
 
             app.UseHttpsRedirection();
