@@ -96,7 +96,7 @@ namespace InvoiceAppWebApi
             });
 
 
-            var allowedOrigins = builder.Configuration["CorsPolicy__AllowedOrigins"]?.Split(';') ?? new string[0];
+            var allowedOrigins = builder.Configuration["CorsPolicy:AllowedOrigins"]?.Split(';') ?? new string[0];
             //CORS
             builder.Services.AddCors(options =>
             {

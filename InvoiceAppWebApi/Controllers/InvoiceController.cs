@@ -46,7 +46,7 @@ namespace InvoiceAppApi.Controllers
         }
 
         [HttpGet("get-all-invoice/{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Get All invoice for a User")]
         [SwaggerResponse(StatusCodes.Status200OK, "Request Successful", typeof(ResponseDto<List<InvoiceResponseDto>>))]
         [SwaggerResponse(StatusCodes.Status403Forbidden, "Unauthorized to Perform this action")]
