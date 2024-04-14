@@ -13,5 +13,6 @@ namespace InvoiceApp.Services.IServices
         Task<ResponseDto<PaginatedList<InvoiceResponseDto>>> GetAllInvoicesForUserAsync(string userId, PaginationParameters paginationParameters);
         Task<ResponseDto<InvoiceResponseDto>> GetInvoiceById(string invoiceId);
         Task<ResponseDto<bool>> MarkInvoiceAsPaidAsync(string invoiceId);
+        Task<ResponseDto<bool>> MarkInvoiceAsPendingAsync(string invoiceId);
     }
 }

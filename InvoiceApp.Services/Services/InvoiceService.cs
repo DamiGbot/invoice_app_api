@@ -259,6 +259,11 @@ namespace InvoiceApp.Services.Services
                 invoiceFromRequest.Status = invoiceRequestDto.isReady ? InvoiceStatus.Pending : InvoiceStatus.Draft;
                 List<Item> oldItem = invoice.Items;
                 invoice.Items = invoiceFromRequest.Items;
+                invoice.Description = invoiceFromRequest.Description;
+                invoice.PaymentTerms = invoiceFromRequest.PaymentTerms;
+                invoice.ClientName = invoiceFromRequest.ClientName;
+                invoice.ClientEmail = invoiceFromRequest.ClientEmail;
+                invoice.PaymentDue = invoice.CreatedAt.AddDays(invoiceFromRequest.PaymentTerms);
 
                 // Do the address and item checking 
                 var clientAddressIsTheSame = CheckAddress(invoiceFromRequest.ClientAddress, invoice.ClientAddress);
@@ -276,6 +281,7 @@ namespace InvoiceApp.Services.Services
                 {
                     invoice.SenderAddress = invoiceFromRequest.SenderAddress;
                 }
+                
 
                 // delete the ItemObject from the database 
                 await _unitOfWork.ItemRepository.DeleteRangeAsync(oldItem);
@@ -358,6 +364,15 @@ namespace InvoiceApp.Services.Services
                     return response;
                 }
 
+                if (invoice.Status == InvoiceStatus.Draft)
+                {
+                    _logger.LogInformation("Invoice {InvoiceId} is marked as draft, Move to Pending first.", invoiceId);
+                    response.IsSuccess = true;
+                    response.Message = "Invalid Operation.";
+                    response.Result = true;
+                    return response;
+                }
+
                 if (invoice.Status == InvoiceStatus.Paid)
                 {
                     _logger.LogInformation("Invoice {InvoiceId} is already marked as paid.", invoiceId);
@@ -387,7 +402,62 @@ namespace InvoiceApp.Services.Services
 
             return response;
         }
-           
+
+        public async Task<ResponseDto<bool>> MarkInvoiceAsPendingAsync(string invoiceId)
+        {
+            _logger.LogInformation("Marking invoice {InvoiceId} as pending at {Time}", invoiceId, DateTime.UtcNow);
+            var response = new ResponseDto<bool> { IsSuccess = false };
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var invoice = await _unitOfWork.InvoiceRepository.GetByIdAsync(invoiceId);
+                if (invoice == null)
+                {
+                    _logger.LogWarning("Invoice {InvoiceId} not found.", invoiceId);
+                    response.Message = "Invoice not found.";
+                    return response;
+                }
+
+                if (invoice.Status == InvoiceStatus.Pending)
+                {
+                    _logger.LogInformation("Invoice {InvoiceId} is already marked as pending.", invoiceId);
+                    response.IsSuccess = true;
+                    response.Message = "Invoice is already marked as pending.";
+                    response.Result = true;
+                    return response;
+                }
+
+                if (invoice.Status == InvoiceStatus.Paid)
+                {
+                    _logger.LogInformation("Invoice {InvoiceId} is marked as paid and cannot be marked as pending.", invoiceId);
+                    response.IsSuccess = true;
+                    response.Message = "Invalid Operation.";
+                    response.Result = true;
+                    return response;
+                }
+
+                invoice.Status = InvoiceStatus.Pending;
+                //invoice.PaymentDate = DateTime.UtcNow; // Assuming there's a PaymentDate field
+                await _unitOfWork.InvoiceRepository.UpdateAsync(invoice);
+                await _unitOfWork.SaveAsync(CancellationToken.None);
+                await _unitOfWork.CommitAsync();
+
+                _logger.LogInformation("Invoice {InvoiceId} marked as pending successfully.", invoiceId);
+                response.IsSuccess = true;
+                response.Message = "Invoice marked as pending successfully.";
+                response.Result = true;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error marking invoice {InvoiceId} as pending.", invoiceId);
+                response.Message = $"An error occurred: {ex.Message}";
+            }
+
+            return response;
+        }
+
         private static bool CheckAddress(Address newAddress, Address currAddress)
         {
             return newAddress.Street == currAddress.Street &&

@@ -138,6 +138,22 @@ namespace InvoiceAppApi.Controllers
             return Ok(response);
         }
 
+        [HttpPost("{invoiceId}/mark-as-pending")]
+        [Authorize]
+        [SwaggerOperation(Summary = "Mark an Invoice as Pending")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Invoice marked as pending successfully", typeof(ResponseDto<bool>))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Invoice not found")]
+        [SwaggerResponse(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> MarkInvoiceAsPending(string invoiceId)
+        {
+            var response = await _invoiceService.MarkInvoiceAsPendingAsync(invoiceId);
+            if (!response.IsSuccess)
+            {
+                return NotFound(response);
+            }
+            return Ok(response);
+        }
+
 
     }
 }
