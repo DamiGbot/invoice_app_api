@@ -6,7 +6,7 @@ namespace InvoiceApp.Services.IServices
 {
     public interface IInvoiceService
     {
-        Task<ResponseDto<string>> AddInvoiceAsync(InvoiceRequestDto invoiceRequestDto);
+        Task<ResponseDto<string>> AddInvoiceAsync(InvoiceCreateRequestDto invoiceRequestDto);
         Task<ResponseDto<bool>> DeleteInvoiceAsync(string invoiceId);
         Task<ResponseDto<bool>> EditInvoiceAsync(string invoiceId, InvoiceRequestDto invoiceRequestDto);
         Task<ResponseDto<List<InvoiceResponseDto>>> GetAllInvoicesForUserAsync(string userId);

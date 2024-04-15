@@ -28,7 +28,7 @@ namespace InvoiceApp.Services.Services
             _mapper = mapper;
             _invoiceIdService = invoiceIdService;
         }
-        public async Task<ResponseDto<string>> AddInvoiceAsync(InvoiceRequestDto invoiceRequestDto)
+        public async Task<ResponseDto<string>> AddInvoiceAsync(InvoiceCreateRequestDto invoiceRequestDto)
         {
             var userEmail = _httpContextAccessor.HttpContext.Items["Email"]; 
             var userId = _httpContextAccessor.HttpContext.Items["UserId"]; 
@@ -46,14 +46,41 @@ namespace InvoiceApp.Services.Services
             //    return response;
             //}
 
+           
+
             await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var invoice = _mapper.Map<Invoice>(invoiceRequestDto);
+
+                if (!string.IsNullOrWhiteSpace(invoiceRequestDto.CreatedAt))
+                {
+                    if (DateTime.TryParse(invoiceRequestDto.CreatedAt, out DateTime parsedDate))
+                    {
+                        if (parsedDate < DateTime.Today)
+                        {
+                            _logger.LogWarning("Attempting to create an invoice with a past date: {0}", invoiceRequestDto.CreatedAt);
+                            response.IsSuccess = false;
+                            response.Message = "Cannot create an invoice with a date in the past.";
+                            return response;
+                        }
+                        invoice.CreatedAt = parsedDate;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Invalid date format received: {0}", invoiceRequestDto.CreatedAt);
+                        response.IsSuccess = false;
+                        response.Message = "Invalid date format provided.";
+                        return response;
+                    }
+                }
+
+
+
                 invoice.UserID = userId as string;
                 invoice.Status = invoiceRequestDto.isReady ? InvoiceStatus.Pending : InvoiceStatus.Draft;
-                invoice.CreatedAt = DateTime.Now;
                 invoice.Created_at = DateTime.Now;
+                invoice.PaymentDue = invoice.CreatedAt.AddDays(invoice.PaymentTerms);
                 invoice.FrontendId = frontendId;
 
                 await _unitOfWork.InvoiceRepository.AddAsync(invoice);
@@ -67,8 +94,7 @@ namespace InvoiceApp.Services.Services
                 response.IsSuccess = true;
                 response.Message = "Invoice succesfully created";
                 response.Result = invoice.FrontendId;
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
                 _logger.LogError(ex, "Error creating invoice");
@@ -246,6 +272,13 @@ namespace InvoiceApp.Services.Services
                     _logger.LogWarning("Invoice {InvoiceId} not found.", invoiceId);
                     return new ResponseDto<bool> { IsSuccess = false, Message = "Invoice not found." };
                 }
+
+                if (invoice.Status == InvoiceStatus.Pending)
+                {
+                    _logger.LogWarning("Attempted to edit pending invoice {InvoiceId}.", invoiceId);
+                    return new ResponseDto<bool> { IsSuccess = false, Message = "Pending invoices cannot be edited." };
+                }
+
 
                 if (invoice.Status == InvoiceStatus.Paid)
                 {

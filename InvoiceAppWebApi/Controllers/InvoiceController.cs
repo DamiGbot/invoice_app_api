@@ -28,7 +28,7 @@ namespace InvoiceAppApi.Controllers
         [SwaggerOperation(Summary = "Create Invoice")]
         [SwaggerResponse(StatusCodes.Status201Created, "Request Successful", typeof(ResponseDto<string>))]
         [SwaggerResponse(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create(InvoiceRequestDto invoiceRequestDTO)
+        public async Task<IActionResult> Create(InvoiceCreateRequestDto invoiceRequestDTO)
         {
             var response = await _invoiceService.AddInvoiceAsync(invoiceRequestDTO);
             return Ok(response);
