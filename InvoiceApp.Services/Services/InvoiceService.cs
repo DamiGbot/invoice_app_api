@@ -262,7 +262,7 @@ namespace InvoiceApp.Services.Services
 
         public async Task<ResponseDto<bool>> EditInvoiceAsync(string invoiceId, InvoiceRequestDto invoiceRequestDto)
         {
-            _logger.LogInformation("Attempting to edit invoice {InvoiceId}", invoiceId);
+            _logger.LogInformation("Attempting to edit invoice {InvoiceId}", invoiceId); 
 
             try
             {
