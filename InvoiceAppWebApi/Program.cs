@@ -1,5 +1,6 @@
 
-using Azure.Storage.Blobs;
+using DinkToPdf.Contracts;
+using DinkToPdf;
 using InvoiceApp.Data.DAO;
 using InvoiceApp.Data.Models;
 using InvoiceApp.Data.Models.IRepository;
@@ -35,6 +36,7 @@ namespace InvoiceAppWebApi
                 options.UseSqlServer(connectionString, b => b.MigrationsAssembly("InvoiceApp.Api")));
 
             builder.Logging.AddAzureWebAppDiagnostics();
+            builder.Services.AddApplicationInsightsTelemetry();
             builder.Services.Configure<AzureBlobLoggerOptions>(options =>
             {
                 options.BlobName = "log.txt";
@@ -114,6 +116,9 @@ namespace InvoiceAppWebApi
                     });
             });
 
+            var origins = builder.Configuration["CorsPolicy:AllowedOrigins"] ?? "No origins configured";
+            Console.WriteLine($"Allowed CORS Origins: {origins}");
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(option =>
@@ -166,6 +171,18 @@ namespace InvoiceAppWebApi
 
             builder.Services.AddHostedService<CacheRefreshBackgroundService>();
             builder.Services.AddHostedService<ClearExpiredCredentialsService>();
+
+
+            // Setup hosting environment
+            //var hostingEnvironment = builder.Environment;
+            //var wkHtmlToPdfPath = Path.Combine(hostingEnvironment.ContentRootPath, $"wkhtmltox/v0.12.4/64 bit/libwkhtmltox.dll");
+
+            //// Load native library
+            //CustomAssemblyLoadContext context = new CustomAssemblyLoadContext();
+            //context.LoadUnmanagedLibrary(wkHtmlToPdfPath);
+
+            // Setup DinkToPdf IConverter
+            builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
             builder.Services.AddHttpClient<PokemonService>();
 
