@@ -9,6 +9,9 @@ using InvoiceApp.SD;
 using InvoiceApp.Data.Enums;
 using AutoMapper;
 using InvoiceApp.Services.Helper;
+using DinkToPdf.Contracts;
+using InvoiceApp.Data.Models.Repository;
+
 
 namespace InvoiceApp.Services.Services
 {
@@ -19,14 +22,16 @@ namespace InvoiceApp.Services.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IInvoiceIdService _invoiceIdService;
+        private readonly IConverter _converter;
 
-        public InvoiceService(ILogger<InvoiceService> logger, IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IMapper mapper, IInvoiceIdService invoiceIdService)
+        public InvoiceService(ILogger<InvoiceService> logger, IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IMapper mapper, IInvoiceIdService invoiceIdService, IConverter converter)
         {
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _invoiceIdService = invoiceIdService;
+            _converter = converter;
         }
         public async Task<ResponseDto<string>> AddInvoiceAsync(InvoiceCreateRequestDto invoiceRequestDto)
         {
@@ -51,19 +56,40 @@ namespace InvoiceApp.Services.Services
             await _unitOfWork.BeginTransactionAsync();
             try
             {
+                // Validate recurrence properties if IsRecurring is true
+                if (invoiceRequestDto.IsRecurring)
+                {
+                    if (!invoiceRequestDto.RecurrencePeriod.HasValue)
+                    {
+                        _logger.LogWarning("RecurrencePeriod is missing for a recurring invoice.");
+                        response.IsSuccess = false;
+                        response.Message = "RecurrencePeriod is required for a recurring invoice.";
+                        return response;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(invoiceRequestDto.RecurrenceEndDate) ||
+                        !DateTime.TryParse(invoiceRequestDto.RecurrenceEndDate, out DateTime parsedEndDate))
+                    {
+                        _logger.LogWarning("Invalid or missing RecurrenceEndDate for a recurring invoice.");
+                        response.IsSuccess = false;
+                        response.Message = "Valid RecurrenceEndDate is required for a recurring invoice.";
+                        return response;
+                    }
+                }
+
                 var invoice = _mapper.Map<Invoice>(invoiceRequestDto);
 
                 if (!string.IsNullOrWhiteSpace(invoiceRequestDto.CreatedAt))
                 {
                     if (DateTime.TryParse(invoiceRequestDto.CreatedAt, out DateTime parsedDate))
                     {
-                        if (parsedDate < DateTime.Today)
-                        {
-                            _logger.LogWarning("Attempting to create an invoice with a past date: {0}", invoiceRequestDto.CreatedAt);
-                            response.IsSuccess = false;
-                            response.Message = "Cannot create an invoice with a date in the past.";
-                            return response;
-                        }
+                        //if (parsedDate < DateTime.Today)
+                        //{
+                        //    _logger.LogWarning("Attempting to create an invoice with a past date: {0}", invoiceRequestDto.CreatedAt);
+                        //    response.IsSuccess = false;
+                        //    response.Message = "Cannot create an invoice with a date in the past.";
+                        //    return response;
+                        //}
                         invoice.CreatedAt = parsedDate;
                     }
                     else
@@ -82,6 +108,10 @@ namespace InvoiceApp.Services.Services
                 invoice.Created_at = DateTime.Now;
                 invoice.PaymentDue = invoice.CreatedAt.AddDays(invoice.PaymentTerms);
                 invoice.FrontendId = frontendId;
+                invoice.IsRecurring = invoiceRequestDto.IsRecurring;
+                invoice.RecurrencePeriod = invoiceRequestDto.IsRecurring ? invoiceRequestDto.RecurrencePeriod : (RecurrencePeriod?)null;
+                invoice.RecurrenceEndDate = invoiceRequestDto.IsRecurring ? DateTime.Parse(invoiceRequestDto.RecurrenceEndDate) : (DateTime?)null;
+                invoice.RecurrenceCount = 0;
 
                 await _unitOfWork.InvoiceRepository.AddAsync(invoice);
 
@@ -485,6 +515,90 @@ namespace InvoiceApp.Services.Services
             {
                 await _unitOfWork.RollbackAsync();
                 _logger.LogError(ex, "Error marking invoice {InvoiceId} as pending.", invoiceId);
+                response.Message = $"An error occurred: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        public async Task<ResponseDto<bool>> GenerateRecurringInvoicesAsync()
+        {
+            _logger.LogInformation("Starting to generate recurring invoices at {Time}", DateTime.UtcNow);
+            var response = new ResponseDto<bool> { IsSuccess = false };
+
+            var today = DateTime.UtcNow.Date;
+            var recurringInvoices = await _unitOfWork.InvoiceRepository.GetRecurringInvoicesAsync(today);
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                foreach (var invoice in recurringInvoices)
+                {
+                    // Check if a recurring invoice has already been generated for today
+                    var existingRecurringInvoice = await _unitOfWork.RecurringInvoiceRepository
+                        .FindAsync(ri => ri.InvoiceId == invoice.Id && ri.RecurrenceDate == today);
+
+                    if (existingRecurringInvoice != null)
+                    {
+                        _logger.LogInformation("Recurring invoice already exists for invoice id {InvoiceId} on {Date}", invoice.Id, today);
+                        continue; // Skip to the next invoice
+                    }
+
+                    try
+                    {
+                        var newInvoice = new Invoice
+                        {
+                            UserID = invoice.UserID,
+                            FrontendId = await _invoiceIdService.GenerateUniqueInvoiceIdForUserAsync(invoice.UserID),
+                            CreatedAt = today,
+                            PaymentDue = today.AddDays(invoice.PaymentTerms),
+                            Description = invoice.Description,
+                            PaymentTerms = invoice.PaymentTerms,
+                            ClientName = invoice.ClientName,
+                            ClientEmail = invoice.ClientEmail,
+                            Status = InvoiceStatus.Pending,
+                            SenderAddressID = invoice.SenderAddressID,
+                            ClientAddressID = invoice.ClientAddressID,
+                            Total = invoice.Total,
+                            IsRecurring = false,
+                            RecurrenceCount = 0
+                        };
+                        newInvoice.Created_at = DateTime.Now;
+
+                        await _unitOfWork.InvoiceRepository.AddAsync(newInvoice);
+
+                        var recurringInvoice = new RecurringInvoice
+                        {
+                            InvoiceId = invoice.Id,
+                            RecurrenceDate = today,
+                            Status = InvoiceStatus.Pending,
+                            Total = invoice.Total
+                        };
+
+                        invoice.RecurrenceCount++;
+                        await _unitOfWork.RecurringInvoiceRepository.AddAsync(recurringInvoice);
+
+                        _logger.LogInformation("Recurring invoice generated successfully for invoice id {InvoiceId}", invoice.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        await _unitOfWork.RollbackAsync();
+                        _logger.LogError(ex, "Error generating recurring invoice for invoice id {InvoiceId}", invoice.Id);
+                        throw; 
+                    }
+                }
+
+                await _unitOfWork.SaveAsync(CancellationToken.None);
+                await _unitOfWork.CommitAsync();
+
+                response.IsSuccess = true;
+                response.Message = "Recurring invoices generated successfully.";
+                response.Result = true;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error during generating recurring invoices process.");
                 response.Message = $"An error occurred: {ex.Message}";
             }
 

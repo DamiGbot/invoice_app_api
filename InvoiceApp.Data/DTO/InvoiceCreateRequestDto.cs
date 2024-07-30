@@ -1,4 +1,5 @@
 ﻿
+using InvoiceApp.Data.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace InvoiceApp.Data.DTO
@@ -16,5 +17,9 @@ namespace InvoiceApp.Data.DTO
         public AddressDto SenderAddress { get; set; }
         public AddressDto ClientAddress { get; set; }
         public List<ItemDto> Items { get; set; }
+        public bool IsRecurring { get; set; }
+        public RecurrencePeriod? RecurrencePeriod { get; set; }
+        public string RecurrenceEndDate { get; set; }
+
     }
 }

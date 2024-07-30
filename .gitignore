@@ -1,10 +1,11 @@
 ## ASP.NET Core Web API .gitignore
+/InoviceAppWebApi/wkhtmltox/
 
 # Built application files
 *.exe
-*.dll
-*.so
-*.dylib
+# *.dll
+# *.so
+# *.dylib
 *.winmd
 bin/
 obj/

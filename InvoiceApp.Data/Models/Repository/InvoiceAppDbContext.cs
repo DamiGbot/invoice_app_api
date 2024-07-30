@@ -17,6 +17,7 @@ namespace InvoiceApp.Data.Models.Repository
         public DbSet<ProfilePicture> ProfilePictures { get; set; }
         public DbSet<SwaggerCredential> SwaggerCredentials { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<RecurringInvoice> RecurringInvoices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,6 +62,18 @@ namespace InvoiceApp.Data.Models.Repository
                 .HasIndex(u => u.Username)
                 .IsUnique();
 
+            modelBuilder.Entity<RecurringInvoice>()
+                .HasKey(ri => ri.Id);
+
+            modelBuilder.Entity<RecurringInvoice>()
+                .HasOne(ri => ri.Invoice)
+                .WithMany()
+                .HasForeignKey(ri => ri.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecurringInvoice>()
+                .HasIndex(ri => new { ri.InvoiceId, ri.RecurrenceDate })
+                .IsUnique();
         }
     }
 }

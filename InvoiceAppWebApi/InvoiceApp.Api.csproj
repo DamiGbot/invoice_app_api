@@ -17,7 +17,6 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
-    <PackageReference Include="DinkToPdf" Version="1.0.8" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
@@ -55,17 +54,5 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>
-
-    <ItemGroup>
-		<None Update="libwkhtmltox.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="libwkhtmltox.dylib">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="libwkhtmltox.so">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-    </ItemGroup>
 
 </Project>

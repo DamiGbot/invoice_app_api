@@ -1,4 +1,6 @@
-﻿using InvoiceApp.Data.DTO;
+﻿using DinkToPdf;
+using DinkToPdf.Contracts;
+using InvoiceApp.Data.DTO;
 using InvoiceApp.SD;
 using InvoiceApp.Services.Helper;
 using InvoiceApp.Services.IServices;
@@ -17,10 +19,12 @@ namespace InvoiceAppApi.Controllers
     {
 
         private readonly IInvoiceService _invoiceService;
+        private readonly IConverter _converter;
 
-        public InvoiceController(IInvoiceService invoiceService)
+        public InvoiceController(IInvoiceService invoiceService, IConverter converter)
         {
             _invoiceService = invoiceService;
+            _converter = converter;
         }
 
         [HttpPost("create")]
@@ -154,6 +158,19 @@ namespace InvoiceAppApi.Controllers
             return Ok(response);
         }
 
-
+        [HttpPost("generate-recurring-invoices")]
+        [Authorize]
+        [SwaggerOperation(Summary = "Generate Recurring Invoices")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Recurring invoices generated successfully")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating recurring invoices")]
+        public async Task<IActionResult> GenerateRecurringInvoices()
+        {
+            var response = await _invoiceService.GenerateRecurringInvoicesAsync();
+            if (!response.IsSuccess)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+            return Ok(response);
+        }
     }
 }

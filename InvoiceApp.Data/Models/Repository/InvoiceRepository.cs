@@ -18,5 +18,32 @@ namespace InvoiceApp.Data.Models.Repository
                 .SingleOrDefaultAsync(i => i.Id == invoiceId);
         }
 
+        public Invoice GetInvoiceById(string invoiceId)
+        {
+            return _context.Invoices.FirstOrDefault(i => i.Id.Equals(invoiceId));
+        }
+
+        public async Task<IEnumerable<Invoice>> GetRecurringInvoicesAsync(DateTime date)
+        {
+            var recurringInvoices = await _context.Invoices
+                .Where(i => i.IsRecurring && i.RecurrenceEndDate >= date)
+                .ToListAsync();
+
+            return recurringInvoices.Where(i => ShouldGenerateInvoice(i, date));
+        }
+
+        private static bool ShouldGenerateInvoice(Invoice invoice, DateTime date)
+        {
+            return invoice.RecurrencePeriod switch
+            {
+                RecurrencePeriod.Daily => true,
+                RecurrencePeriod.Weekly => (date - invoice.CreatedAt).TotalDays % 7 == 0,
+                RecurrencePeriod.Monthly => invoice.CreatedAt.Day == date.Day,
+                RecurrencePeriod.Yearly => invoice.CreatedAt.Month == date.Month && invoice.CreatedAt.Day == date.Day,
+                _ => false
+            };
+        }
+
+
     }
 }

@@ -232,10 +232,22 @@ namespace InvoiceAppApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("PaymentDue")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("PaymentTerms")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecurrenceCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RecurrenceEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RecurrencePeriod")
                         .HasColumnType("int");
 
                     b.Property<string>("SenderAddressID")
@@ -357,6 +369,44 @@ namespace InvoiceAppApi.Migrations
                         .IsUnique();
 
                     b.ToTable("ProfilePictures");
+                });
+
+            modelBuilder.Entity("InvoiceApp.Data.Models.RecurringInvoice", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("Created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Created_by")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InvoiceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("RecurrenceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("Updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Updated_by")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId", "RecurrenceDate")
+                        .IsUnique();
+
+                    b.ToTable("RecurringInvoices");
                 });
 
             modelBuilder.Entity("InvoiceApp.Data.Models.SwaggerCredential", b =>
@@ -572,6 +622,17 @@ namespace InvoiceAppApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InvoiceApp.Data.Models.RecurringInvoice", b =>
+                {
+                    b.HasOne("InvoiceApp.Data.Models.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

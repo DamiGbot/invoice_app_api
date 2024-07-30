@@ -11,6 +11,8 @@ namespace InvoiceApp.Data.Models.IRepository
         IProfilePictureRepository ProfilePictureRepository { get; }
         ISwaggerCredentialRepository SwaggerCredentialRepository { get; }
         IFeedbackRepository FeedbackRepository { get; }
+        IRecurringInvoiceRepository RecurringInvoiceRepository { get; }
+
         Task BeginTransactionAsync();
         Task SaveAsync(CancellationToken cancellationToken);
         Task CommitAsync();

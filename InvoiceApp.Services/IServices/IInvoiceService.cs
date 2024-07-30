@@ -1,4 +1,5 @@
 ﻿using InvoiceApp.Data.DTO;
+using InvoiceApp.Data.Models;
 using InvoiceApp.Services.Helper;
 
 
@@ -9,6 +10,7 @@ namespace InvoiceApp.Services.IServices
         Task<ResponseDto<string>> AddInvoiceAsync(InvoiceCreateRequestDto invoiceRequestDto);
         Task<ResponseDto<bool>> DeleteInvoiceAsync(string invoiceId);
         Task<ResponseDto<bool>> EditInvoiceAsync(string invoiceId, InvoiceRequestDto invoiceRequestDto);
+        Task<ResponseDto<bool>> GenerateRecurringInvoicesAsync();
         Task<ResponseDto<List<InvoiceResponseDto>>> GetAllInvoicesForUserAsync(string userId);
         Task<ResponseDto<PaginatedList<InvoiceResponseDto>>> GetAllInvoicesForUserAsync(string userId, PaginationParameters paginationParameters);
         Task<ResponseDto<InvoiceResponseDto>> GetInvoiceById(string invoiceId);
