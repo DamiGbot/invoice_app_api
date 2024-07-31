@@ -159,7 +159,7 @@ namespace InvoiceAppApi.Controllers
         }
 
         [HttpPost("generate-recurring-invoices")]
-        [Authorize]
+        [Authorize(Roles="Admin")]
         [SwaggerOperation(Summary = "Generate Recurring Invoices")]
         [SwaggerResponse(StatusCodes.Status200OK, "Recurring invoices generated successfully")]
         [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating recurring invoices")]

@@ -83,13 +83,13 @@ namespace InvoiceApp.Services.Services
                 {
                     if (DateTime.TryParse(invoiceRequestDto.CreatedAt, out DateTime parsedDate))
                     {
-                        //if (parsedDate < DateTime.Today)
-                        //{
-                        //    _logger.LogWarning("Attempting to create an invoice with a past date: {0}", invoiceRequestDto.CreatedAt);
-                        //    response.IsSuccess = false;
-                        //    response.Message = "Cannot create an invoice with a date in the past.";
-                        //    return response;
-                        //}
+                        if (parsedDate < DateTime.Today)
+                        {
+                            _logger.LogWarning("Attempting to create an invoice with a past date: {0}", invoiceRequestDto.CreatedAt);
+                            response.IsSuccess = false;
+                            response.Message = "Cannot create an invoice with a date in the past.";
+                            return response;
+                        }
                         invoice.CreatedAt = parsedDate;
                     }
                     else
